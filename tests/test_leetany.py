@@ -55,13 +55,12 @@ class RunnerTests(unittest.TestCase):
 
 class CatalogTests(unittest.TestCase):
     def test_catalog_notes_and_expected_results(self):
-        data=json.loads((ROOT/'Обучение/LLM/Практикум/catalog.json').read_text())
+        data=json.loads((ROOT/'Courses/LLM/99 Практикум.leetany').read_text())
         self.assertEqual(len(data['exercises']),16)
         self.assertEqual(sum(len(e['tests']) for e in data['exercises']),88)
         for e in data['exercises']:
-            code=runner.extract_solution((ROOT/e['note']).read_text());compile(code,e['note'],'exec')
+            code=e['starter'];compile(code,e['id'],'exec')
             self.assertIn('NotImplementedError',code)
-            self.assertTrue((ROOT/e['theory']).exists())
             for c in e['tests']:
                 self.assertEqual(int('expected'in c)+int('error'in c),1)
                 self.assertIsInstance(c['args'],list)

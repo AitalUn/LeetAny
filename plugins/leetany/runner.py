@@ -37,6 +37,9 @@ def run(vault, note, catalog='Обучение/LLM/Практикум/catalog.js
         raise ValueError('Этой заметки нет в каталоге задач')
     if not exercise.get('tests'): raise ValueError('У задачи должны быть тесты')
     code = extract_solution(note_path.read_text())
+    return execute(code, exercise, timeout)
+
+def execute(code, exercise, timeout):
     fingerprint = hashlib.sha256(code.encode()).hexdigest()
     with tempfile.TemporaryDirectory(prefix='leetany-') as directory:
         temp = Path(directory)
@@ -61,14 +64,19 @@ def run(vault, note, catalog='Обучение/LLM/Практикум/catalog.js
 
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('--vault',required=True)
-    parser.add_argument('--note',required=True)
+    parser.add_argument('--vault')
+    parser.add_argument('--note')
+    parser.add_argument('--stdin',action='store_true')
     parser.add_argument('--catalog',default='Обучение/LLM/Практикум/catalog.json')
     parser.add_argument('--timeout',type=float,default=10)
     args=parser.parse_args()
     try:
         if not 0 < args.timeout <= 60: raise ValueError('timeout должен быть от 0 до 60 секунд')
-        result=run(args.vault,args.note,args.catalog,args.timeout)
+        if args.stdin:
+            payload=json.load(sys.stdin)
+            result=execute(payload['code'],payload['exercise'],args.timeout)
+        else:
+            result=run(args.vault,args.note,args.catalog,args.timeout)
     except Exception as error:
         result={'verdict':'ERROR','passed':0,'total':0,'message':str(error)}
     print(json.dumps(result,ensure_ascii=False,allow_nan=False))

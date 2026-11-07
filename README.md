@@ -1,27 +1,21 @@
 # LeetAny
 
-A local coding practice plugin for Obsidian Desktop. Write Python in a Markdown note, run test cases and ask Codex for a review or a new exercise. Includes a Russian-language LLM workbook with 16 exercises, 88 public checks and four mini-projects.
+LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, ✅ means every exercise passed with its current code and tests. ❌ means at least one exercise still needs a passing run.
 
 ## Install
 
-Clone this repository. With Python 3.10+ installed, run the following command from the checkout, replacing the path with the path to an existing Obsidian vault.
+Clone the repo, then run the installer with Python 3.10+:
 
 ```sh
-python3 scripts/install_leetany.py --vault "/path/to/vault" --enable
+python3 scripts/install_leetany.py --vault "/path/to/your/vault" --enable
 ```
 
-Reload Obsidian with community plugins enabled. Open the command palette and select **LeetAny: Открыть практикум**. Choose an exercise, edit its Python block, then select **Запустить тесты**. The installer preserves existing workbook files and local settings. The workbook uses the folders Обучение and Знания.
+Reload Obsidian with community plugins enabled. Open **Courses → LLM → 99 Практикум.leetany**. The included Russian-language course has 16 numbered lessons and one final practice file with 16 exercises. The installer keeps existing lessons and solutions. Existing v0.1 Markdown solutions stay in their original files and can be copied into the new editor.
 
-Tests run local Python with your OS permissions and a timeout. Run solutions you trust. For optional generation and review, install and authenticate Codex CLI and set its executable path in plugin settings. These buttons send the exercise context to your configured provider. Generated exercises are drafts.
+## Use your own agent
 
-## Development
+Open your vault with your usual agent and ask it to create lessons and a final practice file on a topic. The installer appends the [authoring instructions](CLAUDE.md) once to the vault's CLAUDE.md. The plugin command **Добавить инструкции в CLAUDE.md** can also add this block. For an agent with a different instructions filename, reference CLAUDE.md from its project instructions. Each course is independent of a central catalog. The desktop plugin runs local Python only when you click Run. Use code you trust; execution has your OS permissions.
 
-Edit `plugins/leetany/main.src.js` and `core.js`. Build and test using:
+## Develop
 
-```sh
-node scripts/build_leetany.cjs
-node --test tests/leetany.test.cjs
-python3 -m unittest discover -s tests
-```
-
-Tested on macOS with Obsidian Desktop. Licensed under MIT.
+Edit plugins/leetany/main.src.js or core.js, run `node scripts/build_leetany.cjs`, and reinstall. Run `node --test tests/leetany.test.cjs` and `python3 -m unittest discover -s tests`. MIT license.

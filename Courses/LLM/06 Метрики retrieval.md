@@ -20,6 +20,5 @@ tags: [llm, theory]
 2. Приведи пример из своих проектов или объясни, почему тема там не применялась.
 3. Какие данные/метрики понадобятся, чтобы проверить улучшение?
 
-Материал связывается с [[Обучение/LLM/Учебник|учебником LLM]]. Это теория, а не отметка о подтверждённом навыке.
 
-Источник для углубления: [Ragas: context precision](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/). Проверено 07.11.2026; изложение и учебные задачи авторские.
+ [Ragas: context precision](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/). Проверено 07.11.2026; изложение и учебные задачи авторские.

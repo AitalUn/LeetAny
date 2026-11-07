@@ -1,14 +1,12 @@
-.leetany { padding: 20px 16px; overflow-y: auto; }
-.leetany .ll-eyebrow {font-size:11px;letter-spacing:.12em;color:var(--text-accent);font-weight:650;}
-.leetany h2 {margin-top:8px;font-size:24px;}
-.leetany .ll-muted {color:var(--text-muted);font-size:12px;line-height:1.6;}
-.leetany .ll-select {width:100%;height:auto;min-height:36px;margin:12px 0;}
-.leetany .ll-card {border:1px solid var(--background-modifier-border);border-radius:12px;padding:16px;background:var(--background-secondary);}
-.leetany .ll-card h3 {margin-top:0;font-size:17px;}
-.leetany .ll-status {font-size:12px;font-weight:600;margin-top:12px;}
-.leetany .ll-actions {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
-.leetany .ll-actions button {white-space:normal;min-height:36px;height:auto;padding:8px;}
-.leetany .ll-footnote {font-size:11px;line-height:1.6;color:var(--text-faint);}
-.leetany .ll-output {font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:var(--background-secondary);border-radius:8px;max-height:400px;overflow:auto;}
-.leetany .ll-error {color:var(--text-error);}
-.leetany .ll-progress {padding:12px;border-left:3px solid var(--interactive-accent);font-size:12px;}
+.leetany-view { height:100%; overflow:auto; }
+.leetany-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); min-height:100%; }
+.leetany-problem,.leetany-work { padding:1.25rem; min-width:0; }
+.leetany-problem { border-right:1px solid var(--background-modifier-border); }
+.leetany-view select { max-width:100%; }
+.leetany-problem p,.leetany-view pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+.leetany-work { display:flex; flex-direction:column; align-items:stretch; gap:.75rem; }
+.leetany-work textarea { font:var(--font-text-size) var(--font-monospace); line-height:1.5; min-height:18rem; flex:1; padding:.8rem; tab-size:4; }
+.leetany-work button { align-self:flex-start; }
+
+.nav-file-title[data-leetany-badge="✅"] .nav-file-title-content::before { content: "✅ "; }
+.nav-file-title[data-leetany-badge="❌"] .nav-file-title-content::before { content: "❌ "; }
