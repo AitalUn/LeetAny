@@ -55,10 +55,19 @@ class RunnerTests(unittest.TestCase):
 
 class CatalogTests(unittest.TestCase):
     def test_catalog_notes_and_expected_results(self):
-        data=json.loads((ROOT/'Courses/LLM/99 Практикум.leetany').read_text())
-        self.assertEqual(len(data['exercises']),16)
-        self.assertEqual(sum(len(e['tests']) for e in data['exercises']),88)
-        for e in data['exercises']:
+        folder=ROOT/'Courses/LLM'
+        files=sorted(folder.glob('*.leetany'))
+        self.assertEqual(len(files),16)
+        tasks=[]
+        for file in files:
+            tasks_in_file=json.loads(file.read_text())['exercises']
+            self.assertEqual(len(tasks_in_file),1)
+            lesson,=folder.glob(file.name[:2]+' *.md')
+            self.assertIn(f'[[{file.name}|',lesson.read_text())
+            tasks.extend(tasks_in_file)
+        self.assertEqual(len({e['id'] for e in tasks}),16)
+        self.assertEqual(sum(len(e['tests']) for e in tasks),88)
+        for e in tasks:
             code=e['starter'];compile(code,e['id'],'exec')
             self.assertIn('NotImplementedError',code)
             for c in e['tests']:

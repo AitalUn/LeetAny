@@ -22,3 +22,5 @@ SQL GROUP BY агрегирует строки по ключу; COUNT счита
 
 
  [Python: sqlite3](https://docs.python.org/3/library/sqlite3.html). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[14а SQL-отчёт по моделям.leetany|SQL-отчёт по моделям]].

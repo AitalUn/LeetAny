@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-03",
+      "title": "Чанки с перекрытием",
+      "statement": "Разбей text через str.split() на слова. Первый чанк начинается с 0; после каждого непоследнего сдвиг size-overlap. Добавив чанк, дошедший до конца текста, остановись: дублирующего хвоста не создавать. Внутри чанка слова соединены одним пробелом. size — int>0, overlap — int и 0≤overlap<size; bool недопустим, иначе ValueError. Пустой/пробельный текст даёт [].",
+      "example": "(\"a b c d e\", 3, 1) → [\"a b c\", \"c d e\"]",
+      "entry": "chunk_words",
+      "starter": "def chunk_words(text: str, size: int, overlap: int) -> list[str]:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            "a b c d e",
+            3,
+            1
+          ],
+          "expected": [
+            "a b c",
+            "c d e"
+          ]
+        },
+        {
+          "args": [
+            "a b c d",
+            3,
+            1
+          ],
+          "expected": [
+            "a b c",
+            "c d"
+          ]
+        },
+        {
+          "args": [
+            " a\n b ",
+            2,
+            0
+          ],
+          "expected": [
+            "a b"
+          ]
+        },
+        {
+          "args": [
+            "   ",
+            2,
+            0
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            "a",
+            0,
+            0
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            "a",
+            2,
+            2
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

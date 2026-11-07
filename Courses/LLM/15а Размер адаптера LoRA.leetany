@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-15",
+      "title": "Размер адаптера LoRA",
+      "statement": "Для одной матрицы без bias верни base=d_in*d_out, trainable=rank*(d_in+d_out), ratio=trainable/base. Все аргументы — положительные int (без bool), rank≤min(d_in,d_out); иначе ValueError. Это не оценка всех параметров реальной модели.",
+      "example": "(100, 200, 4) → {\"base\":20000,\"trainable\":1200,\"ratio\":0.06}",
+      "entry": "lora_parameters",
+      "starter": "def lora_parameters(d_in: int, d_out: int, rank: int) -> dict:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            100,
+            200,
+            4
+          ],
+          "expected": {
+            "base": 20000,
+            "trainable": 1200,
+            "ratio": 0.06
+          }
+        },
+        {
+          "args": [
+            2,
+            2,
+            2
+          ],
+          "expected": {
+            "base": 4,
+            "trainable": 8,
+            "ratio": 2.0
+          }
+        },
+        {
+          "args": [
+            1,
+            1,
+            1
+          ],
+          "expected": {
+            "base": 1,
+            "trainable": 2,
+            "ratio": 2.0
+          }
+        },
+        {
+          "args": [
+            2,
+            3,
+            4
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            0,
+            2,
+            1
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

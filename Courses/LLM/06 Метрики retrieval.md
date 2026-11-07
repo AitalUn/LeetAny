@@ -22,3 +22,5 @@ tags: [llm, theory]
 
 
  [Ragas: context precision](https://docs.ragas.io/en/stable/concepts/metrics/available_metrics/context_precision/). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[06а Метрики retrieval.leetany|Метрики retrieval]].

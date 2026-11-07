@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-12",
+      "title": "Ключ кэша",
+      "statement": "Верни SHA-256 hex UTF-8 JSON-объекта с ключами model, prompt, config. Сериализация json.dumps(..., ensure_ascii=False, sort_keys=True, separators=(\",\", \":\"), allow_nan=False). Порядок ключей config не должен влиять. model и prompt — строки, config — dict с JSON-совместимыми значениями/строковыми ключами; несоответствие → ValueError. Не добавляй соль, дату или сетевой вызов. Версии индекса/прав должны передаваться вызывающим кодом в config.",
+      "example": "cache_key(\"m\", \"привет\", {\"temperature\":0}) → стабильный 64-символьный hex",
+      "entry": "cache_key",
+      "starter": "def cache_key(model: str, prompt: str, config: dict) -> str:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            "m",
+            "привет",
+            {
+              "temperature": 0
+            }
+          ],
+          "expected": "cf2370011c15873b96d6c876412cbb33d5bf44dee7377a57b7efa09bb20af8f4"
+        },
+        {
+          "args": [
+            "m",
+            "x",
+            {
+              "b": 2,
+              "a": 1
+            }
+          ],
+          "expected": "85b8cbf4a301165c245bf08ec7013bdd9d922fbce884285e4489c4a2fd4ca19b"
+        },
+        {
+          "args": [
+            "m2",
+            "x",
+            {}
+          ],
+          "expected": "9bcf694900f021fee1cba1fa4f0d5cb670b6ce1450228fe88e626f8377d62971"
+        },
+        {
+          "args": [
+            "m",
+            "",
+            {}
+          ],
+          "expected": "62bd19d414ecabb684ec09e21d17b22667f663b6b948474b33f256b434026aa2"
+        },
+        {
+          "args": [
+            1,
+            "x",
+            {}
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

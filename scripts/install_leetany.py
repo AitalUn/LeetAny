@@ -14,9 +14,14 @@ def install(vault,enable=False):
     if not (vault/'.obsidian').is_dir():raise ValueError('Это не Obsidian vault: нет .obsidian/')
     bundled=SOURCE.parents[1]/'Courses'/'LLM'
     destination=vault/'Обучение'/'LLM'
-    if not (destination/'99 Практикум.leetany').is_file():
+    if not destination.is_dir():
         destination=vault/'Courses'/'LLM'
+    legacy = destination/'99 Практикум.leetany'
+    if legacy.is_file():
+        print(f'Keeping existing practice file: {legacy}')
     for source_file in bundled.rglob('*'):
+        if legacy.is_file() and source_file.suffix == '.leetany':
+            continue
         if source_file.is_file():
             dest=destination/source_file.relative_to(bundled)
             if not dest.exists():
@@ -28,7 +33,9 @@ def install(vault,enable=False):
     skill=SOURCE.parents[1]/'.agents/skills/leetany-course/SKILL.md'
     for destination in [target/'SKILL.md', *(vault/root/'skills/leetany-course/SKILL.md' for root in ('.agents','.claude'))]:
         destination.parent.mkdir(parents=True,exist_ok=True)
-        if destination == target/'SKILL.md' or not destination.exists():
+        if (destination == target/'SKILL.md' or not destination.exists()
+                or hashlib.sha256(destination.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
+                == '938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84'):
             shutil.copy2(skill,destination)
         elif destination.read_bytes()!=skill.read_bytes():
             print(f'Keeping customized skill: {destination}')

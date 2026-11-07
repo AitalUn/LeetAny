@@ -22,3 +22,5 @@ Dense retrieval извлекает кандидатов, но не гарант�
 
 
  [Qdrant: distance metrics](https://qdrant.tech/course/beginners/module-2/distance-metrics/). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[04а Точный векторный поиск.leetany|Точный векторный поиск]].

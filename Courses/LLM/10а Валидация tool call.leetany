@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-10",
+      "title": "Валидация tool call",
+      "statement": "call имеет ровно поля name (str) и arguments (dict). tools отображает имя tool в словарь аргумент→тип; допустимы типы str, int, bool. Все перечисленные аргументы обязательны; лишние запрещены. Тип проверяется точно: bool не int. Неизвестный tool/тип схемы, неверные поля/типы → ValueError. При успехе верни новый словарь с теми же name и arguments (копия). Ничего не выполняй, не используй eval.",
+      "example": "({\"name\":\"search\",\"arguments\":{\"q\":\"RAG\"}}, {\"search\":{\"q\":\"str\"}}) → тот же вызов",
+      "entry": "validate_tool_call",
+      "starter": "def validate_tool_call(call: dict, tools: dict[str, dict[str, str]]) -> dict:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            {
+              "name": "search",
+              "arguments": {
+                "q": "RAG"
+              }
+            },
+            {
+              "search": {
+                "q": "str"
+              }
+            }
+          ],
+          "expected": {
+            "name": "search",
+            "arguments": {
+              "q": "RAG"
+            }
+          }
+        },
+        {
+          "args": [
+            {
+              "name": "x",
+              "arguments": {}
+            },
+            {}
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            {
+              "name": "x",
+              "arguments": {
+                "n": true
+              }
+            },
+            {
+              "x": {
+                "n": "int"
+              }
+            }
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            {
+              "name": "x",
+              "arguments": {
+                "q": "a",
+                "extra": 1
+              }
+            },
+            {
+              "x": {
+                "q": "str"
+              }
+            }
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            {
+              "name": "x",
+              "arguments": {
+                "ok": false
+              }
+            },
+            {
+              "x": {
+                "ok": "bool"
+              }
+            }
+          ],
+          "expected": {
+            "name": "x",
+            "arguments": {
+              "ok": false
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-05",
+      "title": "Reciprocal Rank Fusion",
+      "statement": "Объедини списки ID по сумме 1/(c+rank). Ранги начинаются с 1. Дубли внутри каждого списка сначала удаляются с сохранением первого появления, потом назначаются ранги. При равном score сортируй по ID. c — int>0, limit — int≥0, bool недопустим. Иначе ValueError. Верни до limit ID; пустые списки допустимы.",
+      "example": "([[\"a\", \"b\"], [\"b\", \"c\"]], 60, 2) → [\"b\", \"a\"]",
+      "entry": "rrf",
+      "starter": "def rrf(rankings: list[list[str]], c: int, limit: int) -> list[str]:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            [
+              [
+                "a",
+                "b"
+              ],
+              [
+                "b",
+                "c"
+              ]
+            ],
+            60,
+            2
+          ],
+          "expected": [
+            "b",
+            "a"
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                "b",
+                "b",
+                "a"
+              ],
+              [
+                "a"
+              ]
+            ],
+            1,
+            3
+          ],
+          "expected": [
+            "a",
+            "b"
+          ]
+        },
+        {
+          "args": [
+            [],
+            60,
+            2
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            [
+              [
+                "z"
+              ],
+              [
+                "a"
+              ]
+            ],
+            60,
+            3
+          ],
+          "expected": [
+            "a",
+            "z"
+          ]
+        },
+        {
+          "args": [
+            [
+              [
+                "a"
+              ]
+            ],
+            0,
+            2
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            [
+              [
+                "a"
+              ]
+            ],
+            60,
+            0
+          ],
+          "expected": []
+        }
+      ]
+    }
+  ]
+}

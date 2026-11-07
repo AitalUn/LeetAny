@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-09",
+      "title": "Paired bootstrap",
+      "statement": "deltas — непустой список конечных попарных разностей; n_samples — int>0 (без bool), seed — int. Иначе ValueError. Используй rng=random.Random(seed). Для каждого bootstrap-повтора выбирай len(deltas) индексов через rng.randrange(len(deltas)), вычисляй среднее. Отсортируй средние. low/high — nearest-rank 2.5% и 97.5%: индекс max(0,ceil(p*n_samples)-1). mean — среднее исходных deltas. Верни mean, low, high. Это учебный percentile-интервал, не готовая проверка статистической значимости.",
+      "example": "([1, 1], 100, 42) → {\"mean\":1.0,\"low\":1.0,\"high\":1.0}",
+      "entry": "paired_bootstrap",
+      "starter": "def paired_bootstrap(deltas: list[float], n_samples: int, seed: int) -> dict[str, float]:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            [
+              1,
+              1
+            ],
+            100,
+            42
+          ],
+          "expected": {
+            "mean": 1.0,
+            "low": 1.0,
+            "high": 1.0
+          }
+        },
+        {
+          "args": [
+            [
+              -1,
+              1,
+              2
+            ],
+            200,
+            42
+          ],
+          "expected": {
+            "mean": 0.6666666666666666,
+            "low": -1.0,
+            "high": 2.0
+          }
+        },
+        {
+          "args": [
+            [
+              0
+            ],
+            5,
+            0
+          ],
+          "expected": {
+            "mean": 0.0,
+            "low": 0.0,
+            "high": 0.0
+          }
+        },
+        {
+          "args": [
+            [],
+            10,
+            0
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            [
+              1
+            ],
+            0,
+            0
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

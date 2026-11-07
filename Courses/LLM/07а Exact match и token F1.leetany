@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-07",
+      "title": "Exact match и token F1",
+      "statement": "Нормализация: lower(), затем токены re.findall(r\"[^\\W_]+\", text.lower()) в Unicode; нормализованный текст — токены через пробел. exact_match=1.0 при равенстве нормализованных текстов. F1 — гармоническое среднее precision/recall по мультимножествам токенов. Оба пусты → F1=1; один пуст → 0. Верни ровно exact_match и f1. Синонимы, стемминг и числовой смысл не учитывать.",
+      "example": "(\"Кот, кот!\", \"кот\") → {\"exact_match\": 0.0, \"f1\": 2/3}",
+      "entry": "answer_scores",
+      "starter": "def answer_scores(prediction: str, reference: str) -> dict[str, float]:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            "Кот, кот!",
+            "кот"
+          ],
+          "expected": {
+            "exact_match": 0.0,
+            "f1": 0.6666666666666666
+          }
+        },
+        {
+          "args": [
+            " Ответ: 42! ",
+            "ответ 42"
+          ],
+          "expected": {
+            "exact_match": 1.0,
+            "f1": 1.0
+          }
+        },
+        {
+          "args": [
+            "",
+            ""
+          ],
+          "expected": {
+            "exact_match": 1.0,
+            "f1": 1.0
+          }
+        },
+        {
+          "args": [
+            "а",
+            ""
+          ],
+          "expected": {
+            "exact_match": 0.0,
+            "f1": 0.0
+          }
+        },
+        {
+          "args": [
+            "a_b",
+            "a b"
+          ],
+          "expected": {
+            "exact_match": 1.0,
+            "f1": 1.0
+          }
+        }
+      ]
+    }
+  ]
+}

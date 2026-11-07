@@ -22,3 +22,5 @@ Exact match полезен для коротких однозначных отв
 
 
  [scikit-learn: metrics and scoring](https://scikit-learn.org/stable/modules/model_evaluation.html). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[07а Exact match и token F1.leetany|Exact match и token F1]].

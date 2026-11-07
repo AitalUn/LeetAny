@@ -1,6 +1,6 @@
 # LeetAny
 
-LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, ✅ means every exercise passed with its current code and tests. ❌ means at least one exercise still needs a passing run.
+LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, each exercise has its own ✅ when its current code passes its tests, or ❌ until then.
 
 ## Install
 
@@ -10,7 +10,7 @@ Install Obsidian Desktop and Python 3.10+. Open the target vault in Obsidian onc
 python3 scripts/install_leetany.py --vault "/path/to/your/vault" --enable
 ```
 
-In Obsidian Settings → Community plugins, enable community plugins for this vault and reload Obsidian. Open **Courses → LLM → 99 Практикум.leetany**. The included Russian-language course has 16 numbered lessons and one final practice file with 16 exercises. If you have moved this course to `Обучение/LLM/`, the installer finds its `99 Практикум.leetany` there and reuses that folder. The installer keeps existing lessons and solutions. Existing v0.1 Markdown solutions stay in their original files and can be copied into the new editor.
+In Obsidian Settings → Community plugins, enable community plugins for this vault and reload Obsidian. Open **Courses → LLM → 01а Бюджет контекста.leetany**. Each of the 16 lessons has a neighboring exercise file. If your course lives in `Обучение/LLM/`, the installer uses that folder. Existing lessons and solutions are preserved. Vaults with an older combined practice file keep that course layout during a reinstall. Existing v0.1 Markdown solutions stay in their original files and can be copied into the new editor.
 
 ## Write a course
 
@@ -19,11 +19,12 @@ Keep lessons and exercises together. For example, a short course on search quali
 ```text
 Courses/Search quality/
   01 Ranking documents.md
+  01a Rank candidates.leetany
   02 Measuring recall.md
-  99 Practice.leetany
+  02a Recall at k.leetany
 ```
 
-In each lesson, work through a small example and name the matching exercise in the practice file. Give the exercise a stable ID, a function signature, an unfinished starter and a precise contract. Store each public case as positional JSON arguments and exactly one expected result or exception type. For example, a recall function might have `{"args":[["A"],["A","B"]],"expected":0.5}`. Include boundary cases and specify the behavior for invalid inputs. Learners can inspect the cases before running their code. The [authoring skill](.agents/skills/leetany-course/SKILL.md) includes a complete exercise schema.
+In each lesson, work through a small example and link to the neighboring exercise file. Each file contains exactly one entry in its `exercises` array. Give the exercise a stable ID, a function signature, an unfinished starter and a precise contract. Store each public case as positional JSON arguments and exactly one expected result or exception type. For example, a recall function might have `{"args":[["A"],["A","B"]],"expected":0.5}`. Include boundary cases and specify the behavior for invalid inputs. Learners can inspect the cases before running their code. The [authoring skill](.agents/skills/leetany-course/SKILL.md) includes a complete exercise schema.
 
 ## Use your own agent
 

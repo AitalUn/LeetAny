@@ -135,7 +135,13 @@ module.exports = class LeetAny extends Plugin {
           }
           const file=folder+'/SKILL.md';
           if(!await adapter.exists(file)) await adapter.write(file,skill);
-          else if(await adapter.read(file)!==skill) kept.push(file);
+          else {
+            const existing=await adapter.read(file);
+            if(existing===skill) continue;
+            const hash=require('node:crypto').createHash('sha256').update(existing.replace(/\r\n/g,'\n')).digest('hex');
+            if(hash==='938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84') await adapter.write(file,skill);
+            else kept.push(file);
+          }
         }
         const hint=await adapter.read(this.manifest.dir+'/agent-hint.md');
         const marker=hint.split(/\r?\n/)[0];

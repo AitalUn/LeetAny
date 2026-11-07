@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-08",
+      "title": "Разбиение без утечки",
+      "statement": "Каждая строка содержит ровно id и group — строки. Все id уникальны; неправильная структура/дубль id → ValueError. Верни train и test как списки ID в исходном порядке: group в test_groups → test, иначе train. Неизвестные группы в test_groups допустимы, их повторы несущественны. Не меняй вход. Эта задача проверяет назначение групп, а не случайный выбор долей.",
+      "example": "([{\"id\":\"a\",\"group\":\"d1\"},{\"id\":\"b\",\"group\":\"d2\"}], [\"d2\"]) → {\"train\":[\"a\"],\"test\":[\"b\"]}",
+      "entry": "group_split",
+      "starter": "def group_split(rows: list[dict], test_groups: list[str]) -> dict[str, list[str]]:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            [
+              {
+                "id": "a",
+                "group": "d1"
+              },
+              {
+                "id": "b",
+                "group": "d2"
+              },
+              {
+                "id": "c",
+                "group": "d1"
+              }
+            ],
+            [
+              "d1"
+            ]
+          ],
+          "expected": {
+            "train": [
+              "b"
+            ],
+            "test": [
+              "a",
+              "c"
+            ]
+          }
+        },
+        {
+          "args": [
+            [],
+            [
+              "d"
+            ]
+          ],
+          "expected": {
+            "train": [],
+            "test": []
+          }
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "a",
+                "group": "d"
+              }
+            ],
+            []
+          ],
+          "expected": {
+            "train": [
+              "a"
+            ],
+            "test": []
+          }
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "a",
+                "group": "d"
+              },
+              {
+                "id": "a",
+                "group": "e"
+              }
+            ],
+            []
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            [
+              {
+                "id": "a"
+              }
+            ],
+            []
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

@@ -22,3 +22,5 @@ tags: [llm, theory]
 
 
  [MCP: tools](https://modelcontextprotocol.io/specification/latest/server/tools). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[10а Валидация tool call.leetany|Валидация tool call]].

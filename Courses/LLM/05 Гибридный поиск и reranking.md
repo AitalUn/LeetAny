@@ -22,3 +22,5 @@ Reciprocal Rank Fusion объединяет ранги: score(d)=Σ 1/(c+rankᵢ
 
 
  [Qdrant: hybrid queries](https://qdrant.tech/documentation/search/hybrid-queries/). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[05а Reciprocal Rank Fusion.leetany|Reciprocal Rank Fusion]].

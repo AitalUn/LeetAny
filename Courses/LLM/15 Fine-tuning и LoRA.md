@@ -22,3 +22,5 @@ Fine-tuning меняет параметры модели; RAG меняет до�
 
 
  [PEFT: LoRA](https://huggingface.co/docs/peft/main/en/conceptual_guides/lora). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[15а Размер адаптера LoRA.leetany|Размер адаптера LoRA]].

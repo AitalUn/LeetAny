@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-11",
+      "title": "Политика повторов",
+      "statement": "Для HTTP 429, 500, 502, 503, 504 верни min(cap, base*2**(attempt-1)); для остальных HTTP статусов 100..599 — None. attempt — целый номер неудачной попытки ≥1; base/cap — конечные числа >0; status — int100..599, bool нигде не допускается. Иначе ValueError. При очень большом attempt не допускай переполнения. Функция ничего не ждёт и не делает запросов. Retry-After и jitter вне её контракта.",
+      "example": "(429, 3, 0.5, 5) → 2.0",
+      "entry": "retry_delay",
+      "starter": "def retry_delay(status: int, attempt: int, base: float, cap: float) -> float | None:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            429,
+            3,
+            0.5,
+            5
+          ],
+          "expected": 2.0
+        },
+        {
+          "args": [
+            503,
+            10,
+            1,
+            8
+          ],
+          "expected": 8.0
+        },
+        {
+          "args": [
+            401,
+            1,
+            1,
+            8
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            200,
+            1,
+            1,
+            8
+          ],
+          "expected": null
+        },
+        {
+          "args": [
+            500,
+            1000000,
+            1,
+            8
+          ],
+          "expected": 8.0
+        },
+        {
+          "args": [
+            500,
+            0,
+            1,
+            8
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

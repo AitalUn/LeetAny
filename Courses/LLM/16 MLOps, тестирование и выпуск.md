@@ -22,3 +22,5 @@ MLflow может хранить параметры, метрики и арте�
 
 
  [MLflow: tracking](https://mlflow.org/docs/latest/ml/tracking/). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[16а Quality gate релиза.leetany|Quality gate релиза]].

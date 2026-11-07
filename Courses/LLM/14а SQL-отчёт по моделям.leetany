@@ -1,0 +1,92 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-14",
+      "title": "SQL-отчёт по моделям",
+      "statement": "Используй sqlite3 и параметризованную вставку в память. Строки содержат ровно model(str), input_tokens(int≥0), output_tokens(int≥0), ok(bool). Неверные поля/типы → ValueError. SQL-агрегацией GROUP BY model посчитай requests, success_rate (число успешных/requests), total_tokens. Верни список словарей с model и этими тремя полями по model ASC. [] → []. Не собирай агрегацию Python-циклом; это проверяется на ревью, а тесты проверяют результат.",
+      "example": "две строки модели m с ok=True/False и токенами 2+3, 1+4 → requests=2, success_rate=0.5, total_tokens=10",
+      "entry": "model_report",
+      "starter": "def model_report(rows: list[dict]) -> list[dict]:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            [
+              {
+                "model": "m",
+                "input_tokens": 2,
+                "output_tokens": 3,
+                "ok": true
+              },
+              {
+                "model": "m",
+                "input_tokens": 1,
+                "output_tokens": 4,
+                "ok": false
+              }
+            ]
+          ],
+          "expected": [
+            {
+              "model": "m",
+              "requests": 2,
+              "success_rate": 0.5,
+              "total_tokens": 10
+            }
+          ]
+        },
+        {
+          "args": [
+            []
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            [
+              {
+                "model": "z",
+                "input_tokens": 0,
+                "output_tokens": 0,
+                "ok": false
+              },
+              {
+                "model": "a",
+                "input_tokens": 1,
+                "output_tokens": 1,
+                "ok": true
+              }
+            ]
+          ],
+          "expected": [
+            {
+              "model": "a",
+              "requests": 1,
+              "success_rate": 1.0,
+              "total_tokens": 2
+            },
+            {
+              "model": "z",
+              "requests": 1,
+              "success_rate": 0.0,
+              "total_tokens": 0
+            }
+          ]
+        },
+        {
+          "args": [
+            [
+              {
+                "model": "m",
+                "input_tokens": -1,
+                "output_tokens": 0,
+                "ok": true
+              }
+            ]
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

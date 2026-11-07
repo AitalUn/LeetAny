@@ -1,0 +1,88 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "LLM-13",
+      "title": "p50 и p95 latency",
+      "statement": "Непустые values — конечные числа ≥0, p — конечное число 0<p≤100; bool не допускается. Иначе ValueError. Верни sorted(values)[ceil(p/100*n)-1]. Не меняй вход. Это nearest-rank, без линейной интерполяции.",
+      "example": "([1, 2, 3, 4, 100], 95) → 100",
+      "entry": "percentile",
+      "starter": "def percentile(values: list[float], p: float) -> float:\n    raise NotImplementedError(\"Твоё решение\")",
+      "tests": [
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              100
+            ],
+            95
+          ],
+          "expected": 100
+        },
+        {
+          "args": [
+            [
+              1,
+              2,
+              3,
+              4,
+              100
+            ],
+            50
+          ],
+          "expected": 3
+        },
+        {
+          "args": [
+            [
+              7
+            ],
+            1
+          ],
+          "expected": 7
+        },
+        {
+          "args": [
+            [
+              5,
+              1,
+              3,
+              2
+            ],
+            50
+          ],
+          "expected": 2
+        },
+        {
+          "args": [
+            [],
+            50
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            [
+              1
+            ],
+            0
+          ],
+          "error": "ValueError"
+        },
+        {
+          "args": [
+            [
+              -1,
+              2
+            ],
+            50
+          ],
+          "error": "ValueError"
+        }
+      ]
+    }
+  ]
+}

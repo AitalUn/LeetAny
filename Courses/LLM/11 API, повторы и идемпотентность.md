@@ -22,3 +22,5 @@ Exponential backoff увеличивает паузу после каждой п
 
 
  [FastAPI: testing](https://fastapi.tiangolo.com/tutorial/testing/). Проверено 07.11.2026; изложение и учебные задачи авторские.
+
+**Задача к уроку:** [[11а Политика повторов.leetany|Политика повторов]].
