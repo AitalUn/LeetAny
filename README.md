@@ -14,7 +14,9 @@ In 89 seconds, turn an existing async Python lesson into a linked wiki and a cod
 
 https://github.com/user-attachments/assets/e8e2f06d-8069-4ece-8f65-b31c525cba51
 
-[Follow the walkthrough](docs/async-python.md) · [Download the starter vault](docs/media/async-python-before.zip)
+[Watch the two GIFs: configure a wiki, then generate and solve an exercise](docs/wiki-quickstart.md)
+
+[Follow the narrated walkthrough](docs/async-python.md) · [Download the starter vault](docs/media/async-python-before.zip)
 
 ## Install and try an exercise
 
@@ -62,7 +64,7 @@ Default toolchains: `c++` (C++17), `rustc` (Rust 2021), and `go build`. Configur
 
 ## Write a course
 
-Keep lessons and exercises together. For example, a short course on search quality could contain:
+Choose the exercise location in your vault’s `AGENTS.md`. The bundled example keeps tasks beside their lessons. The [wiki quickstart](docs/wiki-quickstart.md) puts them in a separate practice folder. A course using the first layout might look like this:
 
 ```text
 Courses/Search quality/
@@ -72,7 +74,7 @@ Courses/Search quality/
   02a Recall at k.leetany
 ```
 
-In each lesson, work through a small example and link to the neighboring exercise file. Each file contains exactly one entry in its `exercises` array. Give the exercise a stable ID, a function signature, an unfinished starter and a precise contract. Store each public case as positional JSON arguments and exactly one expected result or exception type. For example, a recall function might have `{"args":[["A"],["A","B"]],"expected":0.5}`. Include boundary cases and specify the behavior for invalid inputs. Learners can inspect the cases before running their code. The [authoring skill](.agents/skills/leetany-course/SKILL.md) includes a complete exercise schema.
+In each lesson, work through a small example and link to its exercise file. Each file contains exactly one entry in its `exercises` array. Give the exercise a stable ID, a function signature, an unfinished starter and a precise contract. Store each public case as positional JSON arguments and exactly one expected result or exception type. For example, a recall function might have `{"args":[["A"],["A","B"]],"expected":0.5}`. Include boundary cases and specify the behavior for invalid inputs. Learners can inspect the cases before running their code. The [authoring skill](.agents/skills/leetany-course/SKILL.md) includes a complete exercise schema.
 
 ## Use your own agent
 
