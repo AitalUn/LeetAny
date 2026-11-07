@@ -1,0 +1,34 @@
+WEBVTT
+
+00:00:00.200 --> 00:00:07.700
+Start with an existing Python course. This lesson already explains what happens when you await one job at a time.
+
+00:00:08.200 --> 00:00:15.783
+Install LeetAny in the course vault and enable it under Community plugins. The demo uses the files from the GitHub release.
+
+00:00:16.283 --> 00:00:23.283
+Open the command palette and choose Install course authoring skill. LeetAny adds the skill and a pointer for your agent.
+
+00:00:23.783 --> 00:00:32.283
+In AGENTS.md, tell the agent to preserve source notes, maintain a linked wiki, and give each exercise fixed tests.
+
+00:00:32.783 --> 00:00:41.283
+Ask Codex to turn this lesson into an exercise about scheduling two coroutines. It checks the reference and leaves the starter unfinished.
+
+00:00:41.783 --> 00:00:50.450
+The agent adds a wiki page with links to the source, the original lesson, and the new exercise. Open the exercise from that page.
+
+00:00:50.950 --> 00:00:57.450
+Select the third case. With jobs A and B, both start events should appear before either end event.
+
+00:00:57.950 --> 00:01:04.033
+First, try awaiting each job inside a loop. Run the tests and look at the first failure.
+
+00:01:04.533 --> 00:01:13.033
+Two cases pass. For the two-job case, A finishes before B starts. Compare that output with the expected event order.
+
+00:01:13.533 --> 00:01:20.533
+Replace the loop with asyncio.gather. This schedules both jobs together. Run the same three tests again.
+
+00:01:21.033 --> 00:01:28.450
+All three cases pass. The green check marks this exercise as solved, and the solution stays in the course vault.

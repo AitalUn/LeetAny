@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "schedule-two-jobs",
+      "title": "Schedule two jobs",
+      "statement": "Complete only the body of the inner async schedule() function using asyncio.gather to schedule all supplied jobs together. Keep the provided job helper and synchronous run_jobs(labels) entry unchanged. Each job appends its start, yields once, then appends its end. Return a flat list of event strings in input order within each phase: all starts, then all ends. For A and B, both jobs must start before either finishes. An empty input returns [].",
+      "example": "run_jobs([\"A\", \"B\"]) returns [\"start A\", \"start B\", \"end A\", \"end B\"].",
+      "difficulty": "easy",
+      "lesson": "01 Running coroutines.md",
+      "entry": "run_jobs",
+      "starter": "import asyncio\n\n\nasync def job(label, events):\n    events.append(f\"start {label}\")\n    await asyncio.sleep(0)\n    events.append(f\"end {label}\")\n\n\ndef run_jobs(labels):\n    events = []\n\n    async def schedule():\n        raise NotImplementedError()\n\n    asyncio.run(schedule())\n    return events\n",
+      "editorial": {
+        "explanation": "asyncio.gather schedules the job coroutines together and waits for all of them. Each job yields at asyncio.sleep(0), allowing the other job to start before either ends. The shared events list contains all starts followed by all ends. With no labels, gather completes without adding events. asyncio.run runs schedule() from the synchronous entry.",
+        "code": "import asyncio\n\n\nasync def job(label, events):\n    events.append(f\"start {label}\")\n    await asyncio.sleep(0)\n    events.append(f\"end {label}\")\n\n\ndef run_jobs(labels):\n    events = []\n\n    async def schedule():\n        await asyncio.gather(*(job(label, events) for label in labels))\n\n    asyncio.run(schedule())\n    return events\n"
+      },
+      "tests": [
+        {
+          "args": [
+            []
+          ],
+          "expected": []
+        },
+        {
+          "args": [
+            [
+              "A"
+            ]
+          ],
+          "expected": [
+            "start A",
+            "end A"
+          ]
+        },
+        {
+          "args": [
+            [
+              "A",
+              "B"
+            ]
+          ],
+          "expected": [
+            "start A",
+            "start B",
+            "end A",
+            "end B"
+          ]
+        }
+      ]
+    }
+  ]
+}

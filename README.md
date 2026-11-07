@@ -8,6 +8,14 @@ The Description tab shows the exercise difficulty and a link to its lesson when 
 
 Under the editor, **Testcase** shows the fixed inputs and expected answer for each case. Running the code opens **Test Result** and selects the first failing case, with the actual and expected answers side by side. Editing the solution clears the previous report.
 
+## Watch a course become interactive
+
+In 89 seconds, turn an existing async Python lesson into a linked wiki and a coding exercise. Watch a sequential solution pass two tests, inspect the event order in the third, then fix it with `asyncio.gather`. English narration and captions.
+
+https://github.com/user-attachments/assets/e8e2f06d-8069-4ece-8f65-b31c525cba51
+
+[Follow the walkthrough](docs/async-python.md) · [Download the starter vault](docs/media/async-python-before.zip)
+
 ## Install and try an exercise
 
 Requires Obsidian Desktop 1.15.0 or later and a local Python 3.10+ installation. For manual installation, download `main.js`, `manifest.json` and `styles.css` from the [GitHub release](https://github.com/AitalUn/LeetAny/releases/latest). Put all three files in `<vault>/.obsidian/plugins/leetany/`, reload Obsidian and enable LeetAny in Settings → Community plugins.
