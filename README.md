@@ -1,8 +1,18 @@
-# ![LeetAny](docs/media/leetany-cover.jpg)
+<picture>
+  <source media="(max-width: 600px)" srcset="docs/media/leetany-header-mobile.png">
+  <img src="docs/media/leetany-header.png" alt="LeetAny — Turn notes from your Karpathy-style vault into LeetCode-style exercises.">
+</picture>
 
-**Turn notes from your Karpathy-style vault into LeetCode-style exercises.**
+<p align="center">
+  <strong>Example learning topics</strong><br>
+  <img src="docs/media/topics/python.svg" alt="Python" width="92" height="28">
+  <img src="docs/media/topics/react.svg" alt="React" width="86" height="28">
+  <img src="docs/media/topics/docker.svg" alt="Docker" width="94" height="28">
+  <img src="docs/media/topics/pytorch.svg" alt="PyTorch" width="104" height="28">
+  <img src="docs/media/topics/rust.svg" alt="Rust" width="78" height="28">
+</p>
 
-Your coding agent writes a challenge from a lesson you already have. Open it in Obsidian, write your solution, and run the fixed tests. When a case fails, compare your output with the expected answer. When every case passes, the exercise earns a ✅ in your vault.
+Your coding agent turns a lesson in your Obsidian vault into a challenge. Open it in Obsidian, write your solution, and run the fixed tests. When a case fails, compare your output with the expected answer. When every case passes, the exercise earns a ✅ in your vault.
 
 [Get LeetAny](https://github.com/AitalUn/LeetAny/releases/latest) · [Set up your vault](docs/wiki-quickstart.md)
 
