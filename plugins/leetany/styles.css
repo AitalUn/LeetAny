@@ -1,27 +1,24 @@
-.leetany-view {
-  height: 100%; padding: 0; overflow: auto; container-type: inline-size;
-  --leetany-bar: var(--background-secondary);
+.workspace-leaf-content[data-type="leetany-practice"] > .view-content.leetany-view {
+  height: 100%; min-height: 0; padding: 0; overflow: auto; container-type: inline-size;
+  --leetany-code-size: var(--font-ui-small, 13px);
   --leetany-field: var(--background-modifier-hover);
 }
 .leetany-grid {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  height: 100%; min-height: 30rem; gap: 7px; padding: 7px; box-sizing: border-box;
-  background: var(--background-secondary-alt);
+  height: 100%; min-height: 0; background: var(--background-primary);
 }
 .leetany-panel {
   display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
-  border: 1px solid var(--background-modifier-border); border-radius: var(--radius-m);
-  background: var(--background-primary);
 }
 .leetany-panel-bar {
-  display: flex; align-items: center; flex: none; min-height: 2.5rem; gap: .5rem;
-  padding: .25rem .75rem; background: var(--leetany-bar); color: var(--text-normal);
+  display: flex; align-items: center; flex: none; min-height: 2rem; gap: .5rem;
+  padding: 0 .5rem; border-bottom: 1px solid var(--background-modifier-border); color: var(--text-normal);
   font-size: var(--font-ui-small); font-weight: 600;
 }
 .leetany-panel-bar span:has(> svg) { display: inline-flex; color: var(--color-green); }
 .leetany-description .leetany-panel-bar span:has(> svg) { color: var(--color-blue); }
 .leetany-panel-bar svg { width: 1rem; height: 1rem; }
-.leetany-problem, .leetany-test-body { overflow: auto; padding: clamp(.85rem, 2cqw, 1.5rem); }
+.leetany-problem, .leetany-test-body { overflow: auto; padding: clamp(.65rem, 1.4cqw, 1rem); }
 .leetany-problem h2 { margin: 0 0 1rem; font-size: 1.45em; line-height: 1.25; }
 .leetany-problem select { max-width: 100%; margin-bottom: 1rem; }
 .leetany-statement { line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
@@ -36,8 +33,10 @@
 }
 .leetany-work {
   min-width: 0; min-height: 0; display: grid;
-  grid-template-rows: minmax(10rem, 1.15fr) minmax(11rem, 1fr); gap: 7px;
+  grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
+  border-inline-start: 1px solid var(--background-modifier-border);
 }
+.leetany-tests { border-top: 1px solid var(--background-modifier-border); }
 .leetany-language { font-weight: normal; color: var(--text-muted); }
 .leetany-view button.leetany-run {
   margin-left: auto; padding: 0 .7rem; box-shadow: none;
@@ -71,9 +70,10 @@
 .leetany-tests [hidden] { display: none; }
 .leetany-editor .cm-editor { width: 100%; height: 100%; min-width: 0; background: var(--background-primary); }
 .leetany-editor .cm-editor.cm-focused { outline: none; }
-.leetany-editor .cm-scroller { overflow: auto; font: var(--font-text-size)/1.55 var(--font-monospace); }
+.leetany-editor .cm-scroller { overflow: auto; font: var(--leetany-code-size)/1.5 var(--font-monospace); }
+.leetany-editor .cm-content, .leetany-editor .cm-gutters, .leetany-reference code { font-size: inherit; }
 .leetany-editor .cm-gutters { color: var(--text-faint); border: none; background: transparent; }
-.leetany-editor .cm-content { padding-block: .8rem; }
+.leetany-editor .cm-content { padding-block: .45rem; }
 .leetany-editor .cm-line { padding-inline: .65rem; }
 .leetany-editor .cm-content { caret-color: var(--text-normal); }
 .leetany-keyword { color: var(--code-keyword, var(--color-purple)); }
@@ -84,7 +84,7 @@
 
 @container (max-width: 550px) {
   .leetany-grid { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); }
-  .leetany-work { grid-template-rows: 19rem minmax(15rem, auto); }
+  .leetany-work { grid-template-rows: 19rem minmax(15rem, auto); border-inline-start: 0; border-top: 1px solid var(--background-modifier-border); }
 }
 .nav-file-title[data-leetany-badge="✅"] .nav-file-title-content::before { content: "✅ "; }
 .nav-file-title[data-leetany-badge="❌"] .nav-file-title-content::before { content: "❌ "; }
@@ -103,6 +103,6 @@
 .leetany-level[data-level="hard"] { color: var(--color-red); }
 .leetany-meta .leetany-lesson svg { width: 1em; height: 1em; }
 .leetany-reference {
-  padding: .85rem; overflow-x: auto; border-radius: var(--radius-s);
-  background: var(--background-secondary); font: var(--font-ui-small)/1.55 var(--font-monospace);
+  padding: .5rem 0; overflow-x: auto; background: transparent;
+  font: var(--leetany-code-size)/1.5 var(--font-monospace);
 }
