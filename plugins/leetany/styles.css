@@ -4,7 +4,7 @@
   --leetany-field: var(--background-modifier-hover);
 }
 .leetany-grid {
-  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: grid; grid-template-columns: var(--leetany-description-width, 50%) 1px minmax(0, 1fr);
   height: 100%; min-height: 0; background: var(--background-primary);
 }
 .leetany-panel {
@@ -34,8 +34,20 @@
 .leetany-work {
   min-width: 0; min-height: 0; display: grid;
   grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);
-  border-inline-start: 1px solid var(--background-modifier-border);
+
 }
+.leetany-splitter {
+  position: relative; z-index: 1; justify-self: center; width: 11px;
+  touch-action: none; cursor: col-resize;
+}
+.leetany-splitter::before {
+  content: ""; position: absolute; inset-block: 0; left: 50%;
+  width: 1px; transform: translateX(-50%); background: var(--background-modifier-border);
+}
+.leetany-splitter:is(:hover, :focus-visible)::before, .leetany-resizing .leetany-splitter::before {
+  width: 3px; background: var(--interactive-accent);
+}
+.leetany-resizing { user-select: none; }
 .leetany-tests { border-top: 1px solid var(--background-modifier-border); }
 .leetany-language { font-weight: normal; color: var(--text-muted); }
 .leetany-view button.leetany-run {
@@ -83,6 +95,7 @@
 .leetany-comment { color: var(--text-muted); }
 
 @container (max-width: 550px) {
+  .leetany-splitter { display: none; }
   .leetany-grid { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); }
   .leetany-work { grid-template-rows: 19rem minmax(15rem, auto); border-inline-start: 0; border-top: 1px solid var(--background-modifier-border); }
 }

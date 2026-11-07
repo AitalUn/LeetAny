@@ -2,6 +2,8 @@
 
 LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit syntax-highlighted Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, each exercise has its own ✅ when its current code passes its tests, or ❌ until then.
 
+Drag the vertical divider to resize the description and editor. LeetAny remembers the width for future exercises. Double-click the divider to return to equal columns.
+
 The Description tab shows the exercise difficulty and a link to its lesson when available. Open Solution to read the reference implementation without editing your own code. Controls are in English; the author writes the content in the language of the repository.
 
 Under the editor, **Testcase** shows the fixed inputs and expected answer for each case. Running the code opens **Test Result** and selects the first failing case, with the actual and expected answers side by side. Editing the solution clears the previous report.

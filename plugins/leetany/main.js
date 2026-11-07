@@ -226,6 +226,71 @@ var require_agent_hint = __commonJS({
   }
 });
 
+// plugins/leetany/splitter.js
+var require_splitter = __commonJS({
+  "plugins/leetany/splitter.js"(exports2, module2) {
+    "use strict";
+    init_define_LEETANY_SAMPLE_COURSE();
+    var MIN = 25;
+    var MAX = 75;
+    var DEFAULT = 50;
+    function addColumnSplitter2(grid, initial, onCommit) {
+      const handle = grid.createDiv({ cls: "leetany-splitter", attr: {
+        role: "separator",
+        tabindex: "0",
+        "aria-label": "Description width",
+        "aria-orientation": "vertical",
+        "aria-valuemin": String(MIN),
+        "aria-valuemax": String(MAX),
+        title: "Drag to resize. Double-click to reset."
+      } });
+      let share, drag;
+      function set(value) {
+        share = Math.max(MIN, Math.min(MAX, Math.round(value)));
+        grid.style.setProperty("--leetany-description-width", share + "%");
+        handle.setAttribute("aria-valuenow", String(share));
+        handle.setAttribute("aria-valuetext", share + "%");
+      }
+      set(Number.isFinite(initial) ? initial : DEFAULT);
+      function direction() {
+        return grid.ownerDocument.defaultView.getComputedStyle(grid).direction === "rtl" ? -1 : 1;
+      }
+      handle.onpointerdown = (event) => {
+        if (drag || event.button !== 0) return;
+        event.preventDefault();
+        handle.focus({ preventScroll: true });
+        drag = { id: event.pointerId, x: event.clientX, share, direction: direction() };
+        handle.setPointerCapture(event.pointerId);
+        grid.addClass("leetany-resizing");
+      };
+      handle.onpointermove = (event) => {
+        if (event.pointerId !== drag?.id) return;
+        const width = grid.getBoundingClientRect().width;
+        if (width) set(drag.share + drag.direction * (event.clientX - drag.x) * 100 / width);
+      };
+      handle.onlostpointercapture = (event) => {
+        if (event.pointerId !== drag?.id) return;
+        const changed = drag.share !== share;
+        drag = null;
+        grid.removeClass("leetany-resizing");
+        if (changed) onCommit(share);
+      };
+      handle.ondblclick = () => {
+        set(DEFAULT);
+        onCommit(share);
+      };
+      handle.onkeydown = (event) => {
+        const values = { ArrowLeft: share - 2 * direction(), ArrowRight: share + 2 * direction(), Home: MIN, End: MAX };
+        if (!Object.hasOwn(values, event.key)) return;
+        event.preventDefault();
+        set(values[event.key]);
+        onCommit(share);
+      };
+    }
+    module2.exports = { addColumnSplitter: addColumnSplitter2 };
+  }
+});
+
 // node_modules/@lezer/python/dist/index.cjs
 var require_dist = __commonJS({
   "node_modules/@lezer/python/dist/index.cjs"(exports2) {
@@ -1280,6 +1345,7 @@ var { Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon } = requi
 var { runBundledTests } = require_bundled_runner();
 var skill = require_SKILL();
 var hint = require_agent_hint();
+var { addColumnSplitter } = require_splitter();
 var { showDescription } = require_description();
 var { TestPanel } = require_test_panel();
 var { createPythonEditor } = require_editor();
@@ -1340,6 +1406,10 @@ var PracticeView = class extends TextFileView {
     const grid = root.createDiv({ cls: "leetany-grid" });
     const description = grid.createDiv({ cls: "leetany-panel leetany-description" });
     showDescription(description, this, task, courses);
+    addColumnSplitter(grid, this.plugin.settings.descriptionWidth, (share) => {
+      this.plugin.settings.descriptionWidth = share;
+      this.plugin.saveData(this.plugin.settings).catch((error) => new Notice(error.message));
+    });
     const right = grid.createDiv({ cls: "leetany-work" });
     const codePanel = right.createDiv({ cls: "leetany-panel leetany-code-panel" });
     const bar = codePanel.createDiv({ cls: "leetany-panel-bar" });

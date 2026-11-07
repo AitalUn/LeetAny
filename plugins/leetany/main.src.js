@@ -3,6 +3,7 @@ const {Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon} = requi
 const {runBundledTests} = require('./bundled-runner');
 const skill = require('../../.agents/skills/leetany-course/SKILL.md');
 const hint = require('./agent-hint.md');
+const {addColumnSplitter} = require('./splitter');
 const {showDescription} = require('./description');
 const {TestPanel} = require('./test-panel');
 const {createPythonEditor} = require('./editor');
@@ -33,6 +34,10 @@ class PracticeView extends TextFileView {
     const grid = root.createDiv({cls:'leetany-grid'});
     const description = grid.createDiv({cls:'leetany-panel leetany-description'});
     showDescription(description,this,task,courses);
+    addColumnSplitter(grid,this.plugin.settings.descriptionWidth,share=>{
+      this.plugin.settings.descriptionWidth=share;
+      this.plugin.saveData(this.plugin.settings).catch(error=>new Notice(error.message));
+    });
     const right=grid.createDiv({cls:'leetany-work'});
     const codePanel=right.createDiv({cls:'leetany-panel leetany-code-panel'});
     const bar=codePanel.createDiv({cls:'leetany-panel-bar'});
