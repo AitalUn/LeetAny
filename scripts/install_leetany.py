@@ -5,13 +5,42 @@ import json
 from pathlib import Path
 import shutil
 import sys
+import tempfile
 
 SOURCE=Path(__file__).resolve().parents[1]/'plugins/leetany'
 FILES=['manifest.json','main.js','core.js','styles.css','runner.py','worker.py','agent-hint.md']
 
+def add_missing_metadata(source, target):
+    # Upgrade only exercises that still have the shipped contract.
+    raw = target.read_bytes()
+    try:
+        current = json.loads(raw)
+        sample, = json.loads(source.read_bytes())['exercises']
+        task, = current['exercises']
+        contract = ('id', 'entry', 'starter', 'statement', 'tests')
+        if any(task.get(key) != sample.get(key) for key in contract):
+            return
+        additions = {k: sample[k] for k in ('difficulty', 'lesson', 'editorial')
+                     if k not in task and k in sample}
+    except (ValueError, KeyError, TypeError, AttributeError):
+        return
+    if not additions:
+        return
+    task.update(additions)
+    with tempfile.NamedTemporaryFile(dir=target.parent, delete=False) as stream:
+        temp = Path(stream.name)
+    try:
+        temp.write_text(json.dumps(current, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+        shutil.copymode(target, temp)
+        if target.read_bytes() == raw:
+            temp.replace(target)
+    finally:
+        temp.unlink(missing_ok=True)
+
+
 def install(vault,enable=False):
     vault=Path(vault).resolve()
-    if not (vault/'.obsidian').is_dir():raise ValueError('Это не Obsidian vault: нет .obsidian/')
+    if not (vault/'.obsidian').is_dir():raise ValueError('Not an Obsidian vault: missing .obsidian/')
     bundled=SOURCE.parents[1]/'Courses'/'LLM'
     destination=vault/'Обучение'/'LLM'
     if not destination.is_dir():
@@ -27,6 +56,8 @@ def install(vault,enable=False):
             if not dest.exists():
                 dest.parent.mkdir(parents=True,exist_ok=True)
                 shutil.copy2(source_file,dest)
+            elif dest.suffix == '.leetany':
+                add_missing_metadata(source_file, dest)
     target=vault/'.obsidian/plugins/leetany';target.mkdir(parents=True,exist_ok=True)
     for file in FILES:
         shutil.copy2(SOURCE/file,target/file)
@@ -35,7 +66,8 @@ def install(vault,enable=False):
         destination.parent.mkdir(parents=True,exist_ok=True)
         if (destination == target/'SKILL.md' or not destination.exists()
                 or hashlib.sha256(destination.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
-                == '938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84'):
+                in {'938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84',
+                    '15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f'}):
             shutil.copy2(skill,destination)
         elif destination.read_bytes()!=skill.read_bytes():
             print(f'Keeping customized skill: {destination}')
@@ -72,7 +104,7 @@ def install(vault,enable=False):
     if enable:
         config=vault/'.obsidian/community-plugins.json'
         enabled=json.loads(config.read_text()) if config.exists() else []
-        if not isinstance(enabled,list):raise ValueError('Неизвестный формат community-plugins.json')
+        if not isinstance(enabled,list):raise ValueError('Invalid community-plugins.json format')
         if 'leetany' not in enabled:enabled.append('leetany')
         config.write_text(json.dumps(enabled,ensure_ascii=False,indent=2))
     return target
@@ -80,4 +112,4 @@ def install(vault,enable=False):
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--vault',type=Path,required=True);p.add_argument('--enable',action='store_true');a=p.parse_args()
     print(install(a.vault,a.enable))
-    print('В Obsidian перезагрузи приложение/плагин и открой файл .leetany в папке курса.')
+    print('Reload the plugin in Obsidian and open a .leetany exercise in the course folder.')

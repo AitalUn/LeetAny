@@ -54,7 +54,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "12 Кэш и стоимость.md",
+      "editorial": {
+        "explanation": "Стабильный ключ требует одинаковых байтов для одинаковых настроек. Упорядочь ключи при сериализации, зафиксируй разделители и кодировку и только затем вычисли SHA-256.",
+        "code": "import hashlib\nimport json\n\ndef cache_key(model, prompt, config):\n    if not isinstance(model, str) or not isinstance(prompt, str) or not isinstance(config, dict):\n        raise ValueError(\"Некорректные параметры\")\n    def validate(value):\n        if isinstance(value, dict):\n            for key, child in value.items():\n                if not isinstance(key, str):\n                    raise ValueError(\"Ключ JSON должен быть строкой\")\n                validate(child)\n        elif isinstance(value, list):\n            for child in value:\n                validate(child)\n        elif value is not None and type(value) not in (bool, str, int, float):\n            raise ValueError(\"Значение несовместимо с JSON\")\n    validate(config)\n    record = {\"model\": model, \"prompt\": prompt, \"config\": config}\n    encoded = json.dumps(record, sort_keys=True, ensure_ascii=False,\n                         separators=(\",\", \":\"), allow_nan=False).encode(\"utf-8\")\n    return hashlib.sha256(encoded).hexdigest()"
+      }
     }
   ]
 }

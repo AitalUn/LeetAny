@@ -64,6 +64,11 @@ class CatalogTests(unittest.TestCase):
             self.assertEqual(len(tasks_in_file),1)
             lesson,=folder.glob(file.name[:2]+' *.md')
             self.assertIn(f'[[{file.name}|',lesson.read_text())
+            task, = tasks_in_file
+            self.assertIn(task['difficulty'], ('easy', 'medium', 'hard'))
+            self.assertEqual(task['lesson'], lesson.name)
+            report = runner.execute(task['editorial']['code'], task, 10)
+            self.assertEqual(report['verdict'], 'PASSED', (file.name, report))
             tasks.extend(tasks_in_file)
         self.assertEqual(len({e['id'] for e in tasks}),16)
         self.assertEqual(sum(len(e['tests']) for e in tasks),88)

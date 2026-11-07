@@ -99,7 +99,13 @@
           ],
           "expected": []
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "05 Гибридный поиск и reranking.md",
+      "editorial": {
+        "explanation": "В каждом списке оставь первое появление документа, затем заново пронумеруй позиции с единицы. Сложи вклады списков и отсортируй документы по убыванию суммы.",
+        "code": "from collections import defaultdict\n\ndef rrf(rankings, c, limit):\n    if type(c) is not int or c <= 0 or type(limit) is not int or limit < 0:\n        raise ValueError(\"Некорректные параметры ранжирования\")\n    scores = defaultdict(float)\n    for ranking in rankings:\n        for rank, key in enumerate(dict.fromkeys(ranking), start=1):\n            scores[key] += 1 / (c + rank)\n    return sorted(scores, key=lambda key: (-scores[key], key))[:limit]"
+      }
     }
   ]
 }

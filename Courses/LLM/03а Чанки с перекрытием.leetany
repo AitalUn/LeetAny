@@ -65,7 +65,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "03 Подготовка документов и chunking.md",
+      "editorial": {
+        "explanation": "Шаг между началами чанков равен size − overlap. Как только чанк покрыл последнее слово, разбиение закончено: иначе хвост попадёт в результат дважды.",
+        "code": "def chunk_words(text, size, overlap):\n    if type(size) is not int or type(overlap) is not int or not 0 <= overlap < size:\n        raise ValueError(\"Требуется 0 ≤ overlap < size\")\n    words = text.split()\n    chunks = []\n    for start in range(0, len(words), size - overlap):\n        chunks.append(\" \".join(words[start:start + size]))\n        if start + size >= len(words):\n            break\n    return chunks"
+      }
     }
   ]
 }

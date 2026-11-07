@@ -21,9 +21,9 @@ def equal(a,b):
 def grade(request):
     namespace={'__name__':'student_solution'}
     try:
-        exec(compile(request['code'],'<решение>','exec'),namespace)
+        exec(compile(request['code'],'<solution>','exec'),namespace)
         function=namespace[request['entry']]
-        if not callable(function): raise TypeError('Точка входа должна быть функцией')
+        if not callable(function): raise TypeError('Entry point must be callable')
     except BaseException as error:
         return {'verdict':'ERROR','passed':0,'total':len(request['tests']),'message':''.join(traceback.format_exception_only(type(error),error)).strip()}
     results=[]
@@ -40,7 +40,7 @@ def grade(request):
         except BaseException as error:
             item.update(passed=type(error).__name__==case.get('error'),error=type(error).__name__,message=str(error)[:1000])
         if json.dumps(args,ensure_ascii=False,sort_keys=True)!=before:
-            item.update(passed=False,mutation='Решение изменило входные аргументы')
+            item.update(passed=False,mutation='Solution modified the input arguments')
         results.append(item)
     passed=sum(r['passed'] for r in results)
     return {'verdict':'PASSED' if passed==len(results) else 'FAILED','passed':passed,'total':len(results),'cases':results}

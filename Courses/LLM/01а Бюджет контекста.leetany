@@ -99,7 +99,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "01 Как работает LLM.md",
+      "editorial": {
+        "explanation": "Сначала отложи резерв для ответа и системного сообщения. Затем набирай сообщения с конца до первого, которое не помещается: так сохранится непрерывный суффикс истории.",
+        "code": "def select_context(token_counts, limit, reserve):\n    if any(type(x) is not int or x < 0 for x in [limit, reserve, *token_counts]):\n        raise ValueError(\"Ожидаются неотрицательные целые числа\")\n    remaining = limit - reserve - (token_counts[0] if token_counts else 0)\n    if remaining < 0:\n        raise ValueError(\"Не хватает места для обязательной части\")\n    if not token_counts:\n        return []\n    start = len(token_counts)\n    while start > 1 and token_counts[start - 1] <= remaining:\n        start -= 1\n        remaining -= token_counts[start]\n    return [0, *range(start, len(token_counts))]"
+      }
     }
   ]
 }

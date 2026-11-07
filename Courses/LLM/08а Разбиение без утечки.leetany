@@ -95,7 +95,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "08 Данные и разбиение.md",
+      "editorial": {
+        "explanation": "Назначай разбиение по группе целиком. Множество увиденных ID выявляет дубли, а проход в исходном порядке сохраняет порядок строк в обеих выборках.",
+        "code": "def group_split(rows, test_groups):\n    held_out = set(test_groups)\n    seen = set()\n    result = {\"train\": [], \"test\": []}\n    for row in rows:\n        if (not isinstance(row, dict) or set(row) != {\"id\", \"group\"}\n                or not all(isinstance(x, str) for x in row.values())):\n            raise ValueError(\"Неверная строка\")\n        key = row[\"id\"]\n        if key in seen:\n            raise ValueError(\"Повторный ID\")\n        seen.add(key)\n        split = \"test\" if row[\"group\"] in held_out else \"train\"\n        result[split].append(key)\n    return result"
+      }
     }
   ]
 }

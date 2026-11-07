@@ -59,7 +59,13 @@
             "f1": 1.0
           }
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "07 Оценка ответов LLM.md",
+      "editorial": {
+        "explanation": "Для exact match сравни нормализованные последовательности. Для F1 используй пересечение счётчиков токенов: повтор одного слова учитывается лишь столько раз, сколько оно встречается в обоих текстах.",
+        "code": "import re\nfrom collections import Counter\n\ndef answer_scores(prediction, reference):\n    def tokens(text):\n        return re.findall(r\"[^\\W_]+\", text.lower())\n    pred, gold = tokens(prediction), tokens(reference)\n    matches = sum((Counter(pred) & Counter(gold)).values())\n    length = len(pred) + len(gold)\n    return {\"exact_match\": float(pred == gold),\n            \"f1\": 2 * matches / length if length else 1.0}"
+      }
     }
   ]
 }

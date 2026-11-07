@@ -117,7 +117,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "04 Embeddings и векторный поиск.md",
+      "editorial": {
+        "explanation": "Нормируй запрос и документы, затем вычисли скалярное произведение. Нулевой вектор остаётся нулевым. Второй ключ сортировки делает порядок при равном сходстве воспроизводимым.",
+        "code": "import math\n\ndef cosine_rank(query, documents, k):\n    if type(k) is not int or k < 0 or not query:\n        raise ValueError(\"Проверь k и размерность\")\n    def unit(vector):\n        if len(vector) != len(query) or any(type(x) not in (int, float)\n                or not math.isfinite(x) for x in vector):\n            raise ValueError(\"Некорректный вектор\")\n        scale = max(map(abs, vector))\n        if scale == 0:\n            return vector\n        scaled = [x / scale for x in vector]\n        norm = math.hypot(*scaled)\n        return [x / norm for x in scaled]\n\n    q = unit(query)\n    scores = {key: sum(a * b for a, b in zip(q, unit(vec)))\n              for key, vec in documents.items()}\n    return sorted(scores, key=lambda key: (-scores[key], key))[:k]"
+      }
     }
   ]
 }

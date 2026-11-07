@@ -61,7 +61,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "15 Fine-tuning и LoRA.md",
+      "editorial": {
+        "explanation": "Две матрицы адаптера имеют размеры rank × d_in и d_out × rank. Сложи количества их элементов и сравни сумму с размером базовой матрицы.",
+        "code": "def lora_parameters(d_in, d_out, rank):\n    if any(type(x) is not int or x <= 0 for x in (d_in, d_out, rank)) or rank > min(d_in, d_out):\n        raise ValueError(\"Некорректные размеры LoRA\")\n    base = d_in * d_out\n    trainable = rank * (d_in + d_out)\n    return {\"base\": base, \"trainable\": trainable, \"ratio\": trainable / base}"
+      }
     }
   ]
 }

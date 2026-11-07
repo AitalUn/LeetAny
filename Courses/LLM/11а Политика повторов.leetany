@@ -63,7 +63,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "11 API, повторы и идемпотентность.md",
+      "editorial": {
+        "explanation": "Для временных ошибок удваивай задержку до достижения потолка. Цикл завершается сразу при достижении cap даже для очень большого номера попытки.",
+        "code": "import math\n\ndef retry_delay(status, attempt, base, cap):\n    if (type(status) is not int or not 100 <= status <= 599\n            or type(attempt) is not int or attempt < 1\n            or any(type(x) not in (int, float) or not math.isfinite(x)\n                   or x <= 0 for x in (base, cap))):\n        raise ValueError(\"Некорректные параметры повтора\")\n    if status not in {429, 500, 502, 503, 504}:\n        return None\n    delay = min(base, cap)\n    for _ in range(attempt - 1):\n        if delay >= cap:\n            break\n        delay = min(2 * delay, cap)\n    return delay"
+      }
     }
   ]
 }

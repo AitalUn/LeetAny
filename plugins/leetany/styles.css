@@ -88,3 +88,21 @@
 }
 .nav-file-title[data-leetany-badge="✅"] .nav-file-title-content::before { content: "✅ "; }
 .nav-file-title[data-leetany-badge="❌"] .nav-file-title-content::before { content: "❌ "; }
+
+.workspace-leaf-content[data-type="leetany-practice"] > .view-header { display: none; }
+.leetany-description [hidden] { display: none; }
+.leetany-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.leetany-meta:empty { display: none; }
+.leetany-level, .leetany-meta button.leetany-lesson {
+  display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem;
+  border-radius: 1rem; background: var(--leetany-field); box-shadow: none;
+  font-size: var(--font-ui-small); height: auto;
+}
+.leetany-level[data-level="easy"] { color: var(--color-green); }
+.leetany-level[data-level="medium"] { color: var(--color-yellow); }
+.leetany-level[data-level="hard"] { color: var(--color-red); }
+.leetany-meta .leetany-lesson svg { width: 1em; height: 1em; }
+.leetany-reference {
+  padding: .85rem; overflow-x: auto; border-radius: var(--radius-s);
+  background: var(--background-secondary); font: var(--font-ui-small)/1.55 var(--font-monospace);
+}

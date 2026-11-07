@@ -1,6 +1,7 @@
 'use strict';
 const {Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon} = require('obsidian');
 const path = require('node:path');
+const {showDescription} = require('./description');
 const {TestPanel} = require('./test-panel');
 const {createPythonEditor} = require('./editor');
 const {parseExerciseFile, runTests, fingerprint, isComplete} = require('./core');
@@ -29,29 +30,14 @@ class PracticeView extends TextFileView {
     const task = courses[this.index];
     const grid = root.createDiv({cls:'leetany-grid'});
     const description = grid.createDiv({cls:'leetany-panel leetany-description'});
-    const heading = description.createDiv({cls:'leetany-panel-bar'});
-    setIcon(heading.createSpan(),'file-text');
-    heading.createSpan({text:'Условие'});
-    const left = description.createDiv({cls:'leetany-problem'});
-    if (courses.length > 1) {
-      const select = left.createEl('select',{attr:{'aria-label':'Задача'}});
-      courses.forEach((e,i)=>{const opt=select.createEl('option',{text:e.title});opt.value=String(i);});
-      select.value=String(this.index);
-      select.onchange=()=>{this.index=Number(select.value);this.draw();};
-    }
-    left.createEl('h2',{text:task.title});
-    left.createEl('p',{cls:'leetany-statement',text:task.statement});
-    if(task.example) {
-      left.createEl('h3',{text:'Пример'});
-      left.createEl('pre',{cls:'leetany-example',text:task.example});
-    }
+    showDescription(description,this,task,courses);
     const right=grid.createDiv({cls:'leetany-work'});
     const codePanel=right.createDiv({cls:'leetany-panel leetany-code-panel'});
     const bar=codePanel.createDiv({cls:'leetany-panel-bar'});
     setIcon(bar.createSpan(),'code-xml');
-    bar.createSpan({text:'Код'});
+    bar.createSpan({text:'Code'});
     bar.createSpan({text:'Python',cls:'leetany-language'});
-    const run=bar.createEl('button',{text:'Запустить тесты',cls:'leetany-run'});
+    const run=bar.createEl('button',{text:'Run Tests',cls:'leetany-run'});
     const surface=codePanel.createDiv({cls:'leetany-editor'});
     const panel=new TestPanel(right,task);
     const editor=createPythonEditor(surface,task.solution ?? task.starter,code=>{
@@ -87,7 +73,7 @@ module.exports = class LeetAny extends Plugin {
     this.settings={pythonPath:'python3',...await this.loadData()};
     this.registerView('leetany-practice',leaf=>new PracticeView(leaf,this));
     this.registerExtensions(['leetany'],'leetany-practice');
-    this.addCommand({id:'install-course-skill',name:'Установить skill для создания курсов',callback:async()=>{
+    this.addCommand({id:'install-course-skill',name:'Install course authoring skill',callback:async()=>{
       try {
         const adapter=this.app.vault.adapter;
         const skill=await adapter.read(this.manifest.dir+'/SKILL.md');
@@ -103,7 +89,7 @@ module.exports = class LeetAny extends Plugin {
             const existing=await adapter.read(file);
             if(existing===skill) continue;
             const hash=require('node:crypto').createHash('sha256').update(existing.replace(/\r\n/g,'\n')).digest('hex');
-            if(hash==='938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84') await adapter.write(file,skill);
+            if(['938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84','15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f'].includes(hash)) await adapter.write(file,skill);
             else kept.push(file);
           }
         }
@@ -115,7 +101,7 @@ module.exports = class LeetAny extends Plugin {
             text.split(/\r?\n/).includes(marker)?text:text+(text?'\n\n':'')+hint);
           else await this.app.vault.create(filename,hint);
         }
-        new Notice(kept.length?'Сохранены локальные версии: '+kept.join(', '):'Skill leetany-course установлен');
+        new Notice(kept.length?'Kept customized files: '+kept.join(', '):'Course authoring skill installed');
       } catch(error) {new Notice(error.message);}
     }});
     this.app.workspace.onLayoutReady(()=>this.setupBadges());

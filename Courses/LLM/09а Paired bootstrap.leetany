@@ -72,7 +72,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "09 Статистика экспериментов.md",
+      "editorial": {
+        "explanation": "Единица повторной выборки — разность на одном и том же объекте. В каждом повторе набери столько же разностей с возвращением, затем возьми границы из отсортированных средних.",
+        "code": "import math\nimport random\nfrom statistics import mean\n\ndef paired_bootstrap(deltas, n_samples, seed):\n    if (not deltas or type(n_samples) is not int or n_samples <= 0\n            or type(seed) is not int or any(type(x) not in (int, float)\n            or not math.isfinite(x) for x in deltas)):\n        raise ValueError(\"Некорректные параметры bootstrap\")\n    rng = random.Random(seed)\n    n = len(deltas)\n    samples = sorted(mean(deltas[rng.randrange(n)] for _ in range(n))\n                     for _ in range(n_samples))\n    def quantile(p):\n        return samples[max(0, math.ceil(p * n_samples) - 1)]\n    return {\"mean\": mean(deltas), \"low\": quantile(.025), \"high\": quantile(.975)}"
+      }
     }
   ]
 }

@@ -82,7 +82,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "13 Инференс и наблюдаемость.md",
+      "editorial": {
+        "explanation": "В методе nearest rank ранг начинается с единицы. Округли ранг вверх и вычти единицу для доступа к отсортированной копии выборки.",
+        "code": "import math\n\ndef percentile(values, p):\n    def finite(x):\n        return type(x) in (int, float) and math.isfinite(x)\n    if not finite(p) or not 0 < p <= 100 or not values or any(\n            not finite(x) or x < 0 for x in values):\n        raise ValueError(\"Некорректные значения или процентиль\")\n    rank = max(1, math.ceil(p / 100 * len(values)))\n    return sorted(values)[rank - 1]"
+      }
     }
   ]
 }

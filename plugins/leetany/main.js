@@ -833,6 +833,129 @@ var require_dist2 = __commonJS({
   }
 });
 
+// plugins/leetany/editor.js
+var require_editor = __commonJS({
+  "plugins/leetany/editor.js"(exports2, module2) {
+    "use strict";
+    var { EditorState } = require("@codemirror/state");
+    var { EditorView, keymap, lineNumbers } = require("@codemirror/view");
+    var { defaultKeymap, history, historyKeymap, indentWithTab } = require("@codemirror/commands");
+    var { HighlightStyle, syntaxHighlighting, indentUnit, bracketMatching } = require("@codemirror/language");
+    var { tags, highlightTree } = require("@lezer/highlight");
+    var { python, pythonLanguage } = require_dist2();
+    var highlight = HighlightStyle.define([
+      { tag: tags.keyword, class: "leetany-keyword" },
+      { tag: [tags.function(tags.variableName), tags.typeName, tags.className], class: "leetany-function" },
+      { tag: tags.string, class: "leetany-string" },
+      { tag: [tags.number, tags.bool, tags.null, tags.special(tags.variableName)], class: "leetany-literal" },
+      { tag: tags.comment, class: "leetany-comment" }
+    ]);
+    function createPythonEditor2(parent, doc, onChange) {
+      return new EditorView({
+        parent,
+        doc,
+        extensions: [
+          python(),
+          syntaxHighlighting(highlight),
+          lineNumbers(),
+          bracketMatching(),
+          history(),
+          keymap.of([indentWithTab, ...historyKeymap, ...defaultKeymap]),
+          EditorState.tabSize.of(4),
+          indentUnit.of("    "),
+          EditorView.contentAttributes.of({ "aria-label": "Python code", spellcheck: "false" }),
+          EditorView.updateListener.of((update) => {
+            if (update.docChanged) onChange(update.state.doc.toString());
+          })
+        ]
+      });
+    }
+    function renderPythonExample(parent, source) {
+      let end = 0;
+      highlightTree(pythonLanguage.parser.parse(source), highlight, (from, to, classes) => {
+        parent.append(source.slice(end, from));
+        parent.createSpan({ cls: classes, text: source.slice(from, to) });
+        end = to;
+      });
+      parent.append(source.slice(end));
+    }
+    module2.exports = { createPythonEditor: createPythonEditor2, renderPythonExample };
+  }
+});
+
+// plugins/leetany/description.js
+var require_description = __commonJS({
+  "plugins/leetany/description.js"(exports2, module2) {
+    "use strict";
+    var { setIcon: setIcon2, TFile } = require("obsidian");
+    var { renderPythonExample } = require_editor();
+    var levels = { easy: "Easy", medium: "Medium", hard: "Hard" };
+    function showDescription2(panel, view, task, tasks) {
+      const bar = panel.createDiv({ cls: "leetany-panel-bar" });
+      const problem = panel.createDiv({ cls: "leetany-problem" });
+      const answer = panel.createDiv({ cls: "leetany-problem leetany-answer" });
+      const tabs = [];
+      function addTab(label, icon, page) {
+        const button = bar.createEl("button", { cls: "leetany-tab" });
+        setIcon2(button.createSpan(), icon);
+        button.createSpan({ text: label });
+        tabs.push({ button, page });
+        button.onclick = () => {
+          for (const tab of tabs) {
+            tab.page.hidden = tab.page !== page;
+            tab.button.setAttribute("aria-pressed", String(tab.page === page));
+          }
+        };
+      }
+      addTab("Description", "file-text", problem);
+      const editorial = task.editorial;
+      if (editorial?.code) {
+        addTab("Solution", "book-open", answer);
+        answer.createEl("h2", { text: "Solution" });
+        if (editorial.explanation) answer.createEl("p", { cls: "leetany-statement", text: editorial.explanation });
+        renderPythonExample(answer.createEl("pre", { cls: "leetany-reference" }).createEl("code"), editorial.code);
+      }
+      answer.hidden = true;
+      for (const { button, page } of tabs) button.setAttribute("aria-pressed", String(page === problem));
+      if (tasks.length > 1) {
+        const select = bar.createEl("select", { attr: { "aria-label": "Exercise" } });
+        tasks.forEach((e, i) => {
+          select.createEl("option", { text: e.title }).value = String(i);
+        });
+        select.value = String(view.index);
+        select.onchange = () => {
+          view.index = Number(select.value);
+          view.draw();
+        };
+      }
+      problem.createEl("h2", { text: task.title });
+      const meta = problem.createDiv({ cls: "leetany-meta" });
+      if (Object.hasOwn(levels, task.difficulty)) {
+        const badge = meta.createSpan({ cls: "leetany-level", text: levels[task.difficulty] });
+        badge.dataset.level = task.difficulty;
+        badge.setAttribute("aria-label", "Difficulty: " + levels[task.difficulty]);
+      }
+      if (typeof task.lesson === "string" && task.lesson.trim() && view.file) {
+        const vault = view.app.vault;
+        const sibling = [view.file.parent?.path, task.lesson].filter((x) => x && x !== "/").join("/");
+        const lesson = vault.getAbstractFileByPath(sibling) ?? vault.getAbstractFileByPath(task.lesson);
+        if (lesson instanceof TFile && lesson.extension === "md") {
+          const link = meta.createEl("button", { cls: "leetany-lesson", attr: { title: "Open lesson" } });
+          setIcon2(link.createSpan(), "book-open");
+          link.createSpan({ text: lesson.basename });
+          link.onclick = () => view.app.workspace.getLeaf("tab").openFile(lesson);
+        }
+      }
+      problem.createEl("p", { cls: "leetany-statement", text: task.statement });
+      if (task.example) {
+        problem.createEl("h3", { text: "Example" });
+        problem.createEl("pre", { cls: "leetany-example", text: task.example });
+      }
+    }
+    module2.exports = { showDescription: showDescription2 };
+  }
+});
+
 // plugins/leetany/test-panel.js
 var require_test_panel = __commonJS({
   "plugins/leetany/test-panel.js"(exports2, module2) {
@@ -879,11 +1002,11 @@ var require_test_panel = __commonJS({
         this.names = positionalNames(task);
         this.active = "tests";
         this.index = 0;
-        this.message = "\u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B, \u0447\u0442\u043E\u0431\u044B \u0443\u0432\u0438\u0434\u0435\u0442\u044C \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442.";
+        this.message = "Run your code to see the results.";
         const panel = parent.createDiv({ cls: "leetany-panel leetany-tests" });
         const tabs = panel.createDiv({ cls: "leetany-panel-bar" });
         this.tabs = {};
-        for (const [id, title, icon] of [["tests", "\u0422\u0435\u0441\u0442\u044B", "list-checks"], ["results", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", "terminal"]]) {
+        for (const [id, title, icon] of [["tests", "Testcase", "list-checks"], ["results", "Test Result", "terminal"]]) {
           const button = tabs.createEl("button", { cls: "leetany-tab" });
           setIcon2(button.createSpan(), icon);
           button.createSpan({ text: title });
@@ -895,9 +1018,9 @@ var require_test_panel = __commonJS({
         }
         this.body = panel.createDiv({ cls: "leetany-test-body" });
         this.summary = this.body.createDiv({ cls: "leetany-summary", attr: { "aria-live": "polite" } });
-        this.cases = this.body.createDiv({ cls: "leetany-case-list", attr: { "aria-label": "\u0412\u044B\u0431\u043E\u0440 \u0442\u0435\u0441\u0442\u0430" } });
+        this.cases = this.body.createDiv({ cls: "leetany-case-list", attr: { "aria-label": "Choose a test case" } });
         this.buttons = task.tests.map((_, index) => {
-          const button = this.cases.createEl("button", { cls: "leetany-case", text: "\u0422\u0435\u0441\u0442 " + (index + 1) });
+          const button = this.cases.createEl("button", { cls: "leetany-case", text: "Case " + (index + 1) });
           button.onclick = () => {
             this.index = index;
             this.render();
@@ -910,13 +1033,13 @@ var require_test_panel = __commonJS({
       begin() {
         this.report = null;
         this.active = "results";
-        this.message = "\u041F\u0440\u043E\u0432\u0435\u0440\u044F\u044E\u2026";
+        this.message = "Running\u2026";
         this.render();
       }
       invalidate() {
-        if (!this.report && this.message === "\u041A\u043E\u0434 \u0438\u0437\u043C\u0435\u043D\u0451\u043D. \u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B \u0441\u043D\u043E\u0432\u0430.") return;
+        if (!this.report && this.message === "Code changed. Run the tests again.") return;
         this.report = null;
-        this.message = "\u041A\u043E\u0434 \u0438\u0437\u043C\u0435\u043D\u0451\u043D. \u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B \u0441\u043D\u043E\u0432\u0430.";
+        this.message = "Code changed. Run the tests again.";
         this.render();
       }
       finish(report) {
@@ -942,17 +1065,17 @@ var require_test_panel = __commonJS({
             return;
           }
           const success = report.verdict === "PASSED";
-          const title = { PASSED: "\u041F\u0440\u0438\u043D\u044F\u0442\u043E", FAILED: "\u0422\u0435\u0441\u0442\u044B \u043D\u0435 \u043F\u0440\u043E\u0439\u0434\u0435\u043D\u044B", TIMEOUT: "\u0412\u0440\u0435\u043C\u044F \u0438\u0441\u0442\u0435\u043A\u043B\u043E", ERROR: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0443\u0441\u043A\u0430" }[report.verdict] || report.verdict;
+          const title = { PASSED: "Accepted", FAILED: "Tests failed", TIMEOUT: "Time Limit Exceeded", ERROR: "Execution Error" }[report.verdict] || report.verdict;
           this.summary.createEl("strong", { cls: success ? "leetany-pass" : "leetany-fail", text: title });
-          if (hasCases) this.summary.createSpan({ text: "\u041F\u0440\u043E\u0439\u0434\u0435\u043D\u043E " + report.passed + " \u0438\u0437 " + report.total });
-          if (report.message) field(this.detail, "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435", report.message);
+          if (hasCases) this.summary.createSpan({ text: report.passed + " of " + report.total + " passed" });
+          if (report.message) field(this.detail, "Message", report.message);
           if (!hasCases) return;
         }
         this.buttons.forEach((button, i) => {
           button.setAttribute("aria-pressed", String(i === this.index));
           const outcome = report?.cases?.[i];
           const mark = outcome ? outcome.passed ? "\u2713 " : "\u2715 " : "";
-          button.setText(mark + "\u0422\u0435\u0441\u0442 " + (i + 1));
+          button.setText(mark + "Case " + (i + 1));
           button.dataset.outcome = outcome ? outcome.passed ? "pass" : "fail" : "";
         });
         const test = this.task.tests[this.index];
@@ -961,58 +1084,17 @@ var require_test_panel = __commonJS({
         if (actual) {
           const returned = actual.error ? [actual.error, actual.message].filter(Boolean).join(": ") : actual.actual;
           const comparison = this.detail.createDiv({ cls: "leetany-comparison" });
-          field(comparison, "\u0422\u0432\u043E\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", returned, actual.passed ? "leetany-pass" : "leetany-fail");
-          field(comparison, "\u041E\u0436\u0438\u0434\u0430\u0435\u0442\u0441\u044F", expected);
-          if (actual.mutation) field(this.detail, "\u041E\u0448\u0438\u0431\u043A\u0430", actual.mutation, "leetany-fail");
+          field(comparison, "Output", returned, actual.passed ? "leetany-pass" : "leetany-fail");
+          field(comparison, "Expected", expected);
+          if (actual.mutation) field(this.detail, "Error", actual.mutation, "leetany-fail");
         }
-        if (!test.args.length) field(this.detail, "\u0410\u0440\u0433\u0443\u043C\u0435\u043D\u0442\u044B", "()");
-        test.args.forEach((arg, i) => field(this.detail, (this.names[i] || "\u0410\u0440\u0433\u0443\u043C\u0435\u043D\u0442 " + (i + 1)) + " =", valueText(arg)));
-        if (!actual) field(this.detail, "\u041E\u0436\u0438\u0434\u0430\u0435\u0442\u0441\u044F", expected);
-        if (report?.stdout) field(this.detail, "\u0412\u044B\u0432\u043E\u0434 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B", report.stdout);
+        if (!test.args.length) field(this.detail, "Arguments", "()");
+        test.args.forEach((arg, i) => field(this.detail, (this.names[i] || "Argument " + (i + 1)) + " =", valueText(arg)));
+        if (!actual) field(this.detail, "Expected", expected);
+        if (report?.stdout) field(this.detail, "Program output", report.stdout);
       }
     };
     module2.exports = { TestPanel: TestPanel2 };
-  }
-});
-
-// plugins/leetany/editor.js
-var require_editor = __commonJS({
-  "plugins/leetany/editor.js"(exports2, module2) {
-    "use strict";
-    var { EditorState } = require("@codemirror/state");
-    var { EditorView, keymap, lineNumbers } = require("@codemirror/view");
-    var { defaultKeymap, history, historyKeymap, indentWithTab } = require("@codemirror/commands");
-    var { HighlightStyle, syntaxHighlighting, indentUnit, bracketMatching } = require("@codemirror/language");
-    var { tags } = require("@lezer/highlight");
-    var { python } = require_dist2();
-    var highlight = HighlightStyle.define([
-      { tag: tags.keyword, class: "leetany-keyword" },
-      { tag: [tags.function(tags.variableName), tags.typeName, tags.className], class: "leetany-function" },
-      { tag: tags.string, class: "leetany-string" },
-      { tag: [tags.number, tags.bool, tags.null, tags.special(tags.variableName)], class: "leetany-literal" },
-      { tag: tags.comment, class: "leetany-comment" }
-    ]);
-    function createPythonEditor2(parent, doc, onChange) {
-      return new EditorView({
-        parent,
-        doc,
-        extensions: [
-          python(),
-          syntaxHighlighting(highlight),
-          lineNumbers(),
-          bracketMatching(),
-          history(),
-          keymap.of([indentWithTab, ...historyKeymap, ...defaultKeymap]),
-          EditorState.tabSize.of(4),
-          indentUnit.of("    "),
-          EditorView.contentAttributes.of({ "aria-label": "Python-\u043A\u043E\u0434", spellcheck: "false" }),
-          EditorView.updateListener.of((update) => {
-            if (update.docChanged) onChange(update.state.doc.toString());
-          })
-        ]
-      });
-    }
-    module2.exports = { createPythonEditor: createPythonEditor2 };
   }
 });
 
@@ -1067,6 +1149,7 @@ var require_core = __commonJS({
 // plugins/leetany/main.src.js
 var { Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon } = require("obsidian");
 var path = require("node:path");
+var { showDescription } = require_description();
 var { TestPanel } = require_test_panel();
 var { createPythonEditor } = require_editor();
 var { parseExerciseFile, runTests, fingerprint, isComplete } = require_core();
@@ -1125,35 +1208,14 @@ var PracticeView = class extends TextFileView {
     const task = courses[this.index];
     const grid = root.createDiv({ cls: "leetany-grid" });
     const description = grid.createDiv({ cls: "leetany-panel leetany-description" });
-    const heading = description.createDiv({ cls: "leetany-panel-bar" });
-    setIcon(heading.createSpan(), "file-text");
-    heading.createSpan({ text: "\u0423\u0441\u043B\u043E\u0432\u0438\u0435" });
-    const left = description.createDiv({ cls: "leetany-problem" });
-    if (courses.length > 1) {
-      const select = left.createEl("select", { attr: { "aria-label": "\u0417\u0430\u0434\u0430\u0447\u0430" } });
-      courses.forEach((e, i) => {
-        const opt = select.createEl("option", { text: e.title });
-        opt.value = String(i);
-      });
-      select.value = String(this.index);
-      select.onchange = () => {
-        this.index = Number(select.value);
-        this.draw();
-      };
-    }
-    left.createEl("h2", { text: task.title });
-    left.createEl("p", { cls: "leetany-statement", text: task.statement });
-    if (task.example) {
-      left.createEl("h3", { text: "\u041F\u0440\u0438\u043C\u0435\u0440" });
-      left.createEl("pre", { cls: "leetany-example", text: task.example });
-    }
+    showDescription(description, this, task, courses);
     const right = grid.createDiv({ cls: "leetany-work" });
     const codePanel = right.createDiv({ cls: "leetany-panel leetany-code-panel" });
     const bar = codePanel.createDiv({ cls: "leetany-panel-bar" });
     setIcon(bar.createSpan(), "code-xml");
-    bar.createSpan({ text: "\u041A\u043E\u0434" });
+    bar.createSpan({ text: "Code" });
     bar.createSpan({ text: "Python", cls: "leetany-language" });
-    const run = bar.createEl("button", { text: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u0442\u0435\u0441\u0442\u044B", cls: "leetany-run" });
+    const run = bar.createEl("button", { text: "Run Tests", cls: "leetany-run" });
     const surface = codePanel.createDiv({ cls: "leetany-editor" });
     const panel = new TestPanel(right, task);
     const editor = createPythonEditor(surface, task.solution ?? task.starter, (code) => {
@@ -1192,7 +1254,7 @@ module.exports = class LeetAny extends Plugin {
     this.settings = { pythonPath: "python3", ...await this.loadData() };
     this.registerView("leetany-practice", (leaf) => new PracticeView(leaf, this));
     this.registerExtensions(["leetany"], "leetany-practice");
-    this.addCommand({ id: "install-course-skill", name: "\u0423\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C skill \u0434\u043B\u044F \u0441\u043E\u0437\u0434\u0430\u043D\u0438\u044F \u043A\u0443\u0440\u0441\u043E\u0432", callback: async () => {
+    this.addCommand({ id: "install-course-skill", name: "Install course authoring skill", callback: async () => {
       try {
         const adapter = this.app.vault.adapter;
         const skill = await adapter.read(this.manifest.dir + "/SKILL.md");
@@ -1208,7 +1270,7 @@ module.exports = class LeetAny extends Plugin {
             const existing = await adapter.read(file);
             if (existing === skill) continue;
             const hash = require("node:crypto").createHash("sha256").update(existing.replace(/\r\n/g, "\n")).digest("hex");
-            if (hash === "938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84") await adapter.write(file, skill);
+            if (["938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84", "15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f"].includes(hash)) await adapter.write(file, skill);
             else kept.push(file);
           }
         }
@@ -1219,7 +1281,7 @@ module.exports = class LeetAny extends Plugin {
           if (file) await this.app.vault.process(file, (text) => text.split(/\r?\n/).includes(marker) ? text : text + (text ? "\n\n" : "") + hint);
           else await this.app.vault.create(filename, hint);
         }
-        new Notice(kept.length ? "\u0421\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B \u043B\u043E\u043A\u0430\u043B\u044C\u043D\u044B\u0435 \u0432\u0435\u0440\u0441\u0438\u0438: " + kept.join(", ") : "Skill leetany-course \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u043B\u0435\u043D");
+        new Notice(kept.length ? "Kept customized files: " + kept.join(", ") : "Course authoring skill installed");
       } catch (error) {
         new Notice(error.message);
       }

@@ -86,7 +86,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "14 SQL и журнал экспериментов.md",
+      "editorial": {
+        "explanation": "Запиши валидные события в SQLite через параметры. Для каждой модели GROUP BY собирает число запросов, среднее индикатора успеха и сумму токенов.",
+        "code": "import sqlite3\nfrom contextlib import closing\n\ndef model_report(rows):\n    with closing(sqlite3.connect(\":memory:\")) as db:\n        db.row_factory = sqlite3.Row\n        db.execute(\"CREATE TABLE events (model TEXT, inp INTEGER, outp INTEGER, ok INTEGER)\")\n        for row in rows:\n            if not isinstance(row, dict) or set(row) != {\"model\", \"input_tokens\", \"output_tokens\", \"ok\"}:\n                raise ValueError(\"Неверные поля\")\n            if (not isinstance(row[\"model\"], str) or type(row[\"ok\"]) is not bool\n                    or any(type(row[k]) is not int or row[k] < 0\n                           for k in (\"input_tokens\", \"output_tokens\"))):\n                raise ValueError(\"Неверное значение\")\n            db.execute(\"INSERT INTO events VALUES (?, ?, ?, ?)\",\n                       (row[\"model\"], row[\"input_tokens\"], row[\"output_tokens\"], row[\"ok\"]))\n        query = \"\"\"SELECT model, COUNT(*) AS requests, AVG(ok) AS success_rate,\n                          SUM(inp + outp) AS total_tokens\n                   FROM events GROUP BY model ORDER BY model\"\"\"\n        return [dict(row) for row in db.execute(query)]"
+      }
     }
   ]
 }

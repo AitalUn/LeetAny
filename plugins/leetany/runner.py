@@ -17,14 +17,14 @@ import tempfile
 def inside(root, relative):
     path = (root / relative).resolve()
     if not path.is_relative_to(root.resolve()):
-        raise ValueError('Путь выходит за пределы хранилища')
+        raise ValueError('Path is outside the vault')
     return path
 
 
 def extract_solution(text):
     blocks = re.findall(r'<!-- solution:start -->\s*```python\s*\n(.*?)\n```\s*<!-- solution:end -->', text, re.S)
     if len(blocks) != 1:
-        raise ValueError('Нужен ровно один Python-блок между solution:start и solution:end')
+        raise ValueError('Expected one Python block between solution:start and solution:end')
     return blocks[0]
 
 
@@ -34,8 +34,8 @@ def run(vault, note, catalog='Обучение/LLM/Практикум/catalog.js
     manifest = json.loads(inside(root, catalog).read_text())
     exercise = next((e for e in manifest['exercises'] if inside(root, e['note']) == note_path), None)
     if exercise is None:
-        raise ValueError('Этой заметки нет в каталоге задач')
-    if not exercise.get('tests'): raise ValueError('У задачи должны быть тесты')
+        raise ValueError('Exercise not found in the catalog')
+    if not exercise.get('tests'): raise ValueError('The exercise needs tests')
     code = extract_solution(note_path.read_text())
     return execute(code, exercise, timeout)
 
@@ -52,9 +52,9 @@ def execute(code, exercise, timeout):
                 if os.name != 'nt': os.killpg(process.pid, signal.SIGKILL)
                 else: process.kill()
                 process.wait()
-                return {'exercise_id':exercise['id'],'code_hash':fingerprint,'verdict':'TIMEOUT','passed':0,'total':len(exercise['tests']),'message':f'Превышен лимит {timeout} с; код не прошёл проверку'}
+                return {'exercise_id':exercise['id'],'code_hash':fingerprint,'verdict':'TIMEOUT','passed':0,'total':len(exercise['tests']),'message':f'Time limit of {timeout} seconds exceeded'}
         if not (temp/'result.json').exists():
-            return {'exercise_id':exercise['id'],'code_hash':fingerprint,'verdict':'ERROR','passed':0,'total':len(exercise['tests']),'message':(temp/'stderr.txt').read_text(errors='replace')[-4000:] or f'Python завершился с кодом {process.returncode}'}
+            return {'exercise_id':exercise['id'],'code_hash':fingerprint,'verdict':'ERROR','passed':0,'total':len(exercise['tests']),'message':(temp/'stderr.txt').read_text(errors='replace')[-4000:] or f'Python exited with code {process.returncode}'}
         result = json.loads((temp/'result.json').read_text())
         result.update(exercise_id=exercise['id'],code_hash=fingerprint)
         output = (temp/'stdout.txt').read_text(errors='replace')
@@ -71,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('--timeout',type=float,default=10)
     args=parser.parse_args()
     try:
-        if not 0 < args.timeout <= 60: raise ValueError('timeout должен быть от 0 до 60 секунд')
+        if not 0 < args.timeout <= 60: raise ValueError('Timeout must be greater than zero and at most 60 seconds')
         if args.stdin:
             payload=json.load(sys.stdin)
             result=execute(payload['code'],payload['exercise'],args.timeout)

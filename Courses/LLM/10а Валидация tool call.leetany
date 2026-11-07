@@ -94,7 +94,13 @@
             }
           }
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "10 Агенты, tools и MCP.md",
+      "editorial": {
+        "explanation": "Имя инструмента выбирает схему. Сначала сравни наборы ключей, затем проверь точный тип каждого значения. Это исключает True там, где инструмент ожидает int.",
+        "code": "def validate_tool_call(call, tools):\n    if not isinstance(call, dict) or set(call) != {\"name\", \"arguments\"}:\n        raise ValueError(\"Неверный формат вызова\")\n    name, args = call[\"name\"], call[\"arguments\"]\n    if not isinstance(name, str) or not isinstance(args, dict) or name not in tools:\n        raise ValueError(\"Неизвестный инструмент или неверные аргументы\")\n    schema = tools[name]\n    types = {\"str\": str, \"int\": int, \"bool\": bool}\n    if not isinstance(schema, dict) or set(schema) != set(args):\n        raise ValueError(\"Поля не соответствуют схеме\")\n    for key, kind in schema.items():\n        if not isinstance(kind, str) or type(args[key]) is not types.get(kind):\n            raise ValueError(\"Неверный тип аргумента\")\n    return {\"name\": name, \"arguments\": args.copy()}"
+      }
     }
   ]
 }

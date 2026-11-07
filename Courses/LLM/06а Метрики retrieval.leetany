@@ -84,7 +84,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "06 Метрики retrieval.md",
+      "editorial": {
+        "explanation": "Сначала убери повторы из выдачи и возьми первые k позиций. Точность делится на k, полнота — на число эталонных документов. Для reciprocal rank нужна позиция первого попадания.",
+        "code": "def retrieval_metrics(ranked, relevant, k):\n    if type(k) is not int or k <= 0:\n        raise ValueError(\"k должен быть положительным\")\n    target = set(relevant)\n    top = list(dict.fromkeys(ranked))[:k]\n    hits = [i for i, doc in enumerate(top, 1) if doc in target]\n    return {\"precision\": len(hits) / k,\n            \"recall\": len(hits) / len(target) if target else 0,\n            \"rr\": 1 / hits[0] if hits else 0}"
+      }
     }
   ]
 }

@@ -45,11 +45,11 @@ class TestPanel {
     this.names = positionalNames(task);
     this.active = 'tests';
     this.index = 0;
-    this.message = 'Запусти тесты, чтобы увидеть результат.';
+    this.message = 'Run your code to see the results.';
     const panel = parent.createDiv({cls:'leetany-panel leetany-tests'});
     const tabs = panel.createDiv({cls:'leetany-panel-bar'});
     this.tabs = {};
-    for (const [id, title, icon] of [['tests','Тесты','list-checks'], ['results','Результат','terminal']]) {
+    for (const [id, title, icon] of [['tests','Testcase','list-checks'], ['results','Test Result','terminal']]) {
       const button = tabs.createEl('button',{cls:'leetany-tab'});
       setIcon(button.createSpan(),icon);
       button.createSpan({text:title});
@@ -58,9 +58,9 @@ class TestPanel {
     }
     this.body = panel.createDiv({cls:'leetany-test-body'});
     this.summary = this.body.createDiv({cls:'leetany-summary',attr:{'aria-live':'polite'}});
-    this.cases = this.body.createDiv({cls:'leetany-case-list',attr:{'aria-label':'Выбор теста'}});
+    this.cases = this.body.createDiv({cls:'leetany-case-list',attr:{'aria-label':'Choose a test case'}});
     this.buttons = task.tests.map((_, index) => {
-      const button = this.cases.createEl('button',{cls:'leetany-case',text:'Тест '+(index+1)});
+      const button = this.cases.createEl('button',{cls:'leetany-case',text:'Case '+(index+1)});
       button.onclick = () => { this.index = index; this.render(); };
       return button;
     });
@@ -71,14 +71,14 @@ class TestPanel {
   begin() {
     this.report = null;
     this.active = 'results';
-    this.message = 'Проверяю…';
+    this.message = 'Running…';
     this.render();
   }
 
   invalidate() {
-    if (!this.report && this.message === 'Код изменён. Запусти тесты снова.') return;
+    if (!this.report && this.message === 'Code changed. Run the tests again.') return;
     this.report = null;
-    this.message = 'Код изменён. Запусти тесты снова.';
+    this.message = 'Code changed. Run the tests again.';
     this.render();
   }
 
@@ -106,10 +106,10 @@ class TestPanel {
         return;
       }
       const success = report.verdict === 'PASSED';
-      const title = {PASSED:'Принято', FAILED:'Тесты не пройдены', TIMEOUT:'Время истекло', ERROR:'Ошибка запуска'}[report.verdict] || report.verdict;
+      const title = {PASSED:'Accepted', FAILED:'Tests failed', TIMEOUT:'Time Limit Exceeded', ERROR:'Execution Error'}[report.verdict] || report.verdict;
       this.summary.createEl('strong',{cls: success ? 'leetany-pass' : 'leetany-fail',text:title});
-      if (hasCases) this.summary.createSpan({text:'Пройдено '+report.passed+' из '+report.total});
-      if (report.message) field(this.detail,'Сообщение',report.message);
+      if (hasCases) this.summary.createSpan({text:report.passed+' of '+report.total+' passed'});
+      if (report.message) field(this.detail,'Message',report.message);
       if (!hasCases) return;
     }
 
@@ -117,7 +117,7 @@ class TestPanel {
       button.setAttribute('aria-pressed',String(i === this.index));
       const outcome = report?.cases?.[i];
       const mark = outcome ? (outcome.passed ? '✓ ' : '✕ ') : '';
-      button.setText(mark+'Тест '+(i+1));
+      button.setText(mark+'Case '+(i+1));
       button.dataset.outcome = outcome ? (outcome.passed ? 'pass' : 'fail') : '';
     });
     const test = this.task.tests[this.index];
@@ -126,14 +126,14 @@ class TestPanel {
     if (actual) {
       const returned = actual.error ? [actual.error,actual.message].filter(Boolean).join(': ') : actual.actual;
       const comparison = this.detail.createDiv({cls:'leetany-comparison'});
-      field(comparison,'Твой результат',returned,actual.passed ? 'leetany-pass' : 'leetany-fail');
-      field(comparison,'Ожидается',expected);
-      if (actual.mutation) field(this.detail,'Ошибка',actual.mutation,'leetany-fail');
+      field(comparison,'Output',returned,actual.passed ? 'leetany-pass' : 'leetany-fail');
+      field(comparison,'Expected',expected);
+      if (actual.mutation) field(this.detail,'Error',actual.mutation,'leetany-fail');
     }
-    if (!test.args.length) field(this.detail,'Аргументы','()');
-    test.args.forEach((arg,i) => field(this.detail,(this.names[i] || 'Аргумент '+(i+1))+' =',valueText(arg)));
-    if (!actual) field(this.detail,'Ожидается',expected);
-    if (report?.stdout) field(this.detail,'Вывод программы',report.stdout);
+    if (!test.args.length) field(this.detail,'Arguments','()');
+    test.args.forEach((arg,i) => field(this.detail,(this.names[i] || 'Argument '+(i+1))+' =',valueText(arg)));
+    if (!actual) field(this.detail,'Expected',expected);
+    if (report?.stdout) field(this.detail,'Program output',report.stdout);
   }
 }
 

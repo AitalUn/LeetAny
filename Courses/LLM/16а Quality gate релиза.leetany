@@ -84,7 +84,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "medium",
+      "lesson": "16 MLOps, тестирование и выпуск.md",
+      "editorial": {
+        "explanation": "Кандидат должен пройти сразу три проверки: сохранить качество базовой модели, достигнуть заданного минимума качества и уложиться в лимит задержки.",
+        "code": "import math\n\ndef release_gate(baseline, candidate, min_quality, max_p95):\n    def nonnegative(x):\n        return type(x) in (int, float) and math.isfinite(x) and x >= 0\n    for metrics in (baseline, candidate):\n        if (not isinstance(metrics, dict) or set(metrics) != {\"quality\", \"p95_ms\"}\n                or not nonnegative(metrics[\"quality\"]) or metrics[\"quality\"] > 1\n                or not nonnegative(metrics[\"p95_ms\"])):\n            raise ValueError(\"Некорректные метрики\")\n    if not nonnegative(min_quality) or min_quality > 1 or not nonnegative(max_p95):\n        raise ValueError(\"Некорректные пороги\")\n    return (candidate[\"quality\"] >= max(baseline[\"quality\"], min_quality)\n            and candidate[\"p95_ms\"] <= max_p95)"
+      }
     }
   ]
 }

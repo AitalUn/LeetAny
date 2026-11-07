@@ -73,7 +73,13 @@
           ],
           "error": "ValueError"
         }
-      ]
+      ],
+      "difficulty": "easy",
+      "lesson": "02 Декодирование и промпты.md",
+      "editorial": {
+        "explanation": "Вычитание максимального логита сохраняет отношения вероятностей. Наибольший вес тогда равен единице, и экспоненты не переполняются.",
+        "code": "import math\n\ndef softmax(logits, temperature):\n    if any(type(x) not in (int, float) or not math.isfinite(x)\n           for x in [temperature, *logits]) or temperature <= 0:\n        raise ValueError(\"Проверь температуру и логиты\")\n    if not logits:\n        return []\n    peak = max(logits)\n    weights = [math.exp((x - peak) / temperature) for x in logits]\n    total = sum(weights)\n    return [w / total for w in weights]"
+      }
     }
   ]
 }
