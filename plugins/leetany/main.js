@@ -833,6 +833,148 @@ var require_dist2 = __commonJS({
   }
 });
 
+// plugins/leetany/test-panel.js
+var require_test_panel = __commonJS({
+  "plugins/leetany/test-panel.js"(exports2, module2) {
+    "use strict";
+    var { pythonLanguage } = require_dist2();
+    var { setIcon: setIcon2 } = require("obsidian");
+    function positionalNames(task) {
+      const names = [];
+      pythonLanguage.parser.parse(task.starter).iterate({ enter(node) {
+        if (node.name !== "FunctionDefinition") return;
+        const def = node.node;
+        const name = def.getChild("VariableName");
+        if (!name || task.starter.slice(name.from, name.to) !== task.entry) return false;
+        let atStart = true;
+        for (let p = def.getChild("ParamList")?.firstChild; p; p = p.nextSibling) {
+          if (p.name === "*" || p.name === "**") break;
+          if (p.name === ",") atStart = true;
+          else if (p.name !== "(" && atStart) {
+            if (p.name === "VariableName") names.push(task.starter.slice(p.from, p.to));
+            atStart = false;
+          }
+        }
+        return false;
+      } });
+      return names;
+    }
+    function valueText(value) {
+      if (value === null) return "None";
+      if (typeof value === "boolean") return value ? "True" : "False";
+      if (Array.isArray(value)) return "[" + value.map(valueText).join(", ") + "]";
+      if (typeof value === "object") {
+        return "{" + Object.entries(value).map(([k, v]) => JSON.stringify(k) + ": " + valueText(v)).join(", ") + "}";
+      }
+      return JSON.stringify(value);
+    }
+    function field(parent, label, value, tone) {
+      const block = parent.createDiv({ cls: "leetany-field" });
+      block.createDiv({ cls: "leetany-field-label", text: label });
+      block.createEl("pre", { text: value, cls: tone || "" });
+    }
+    var TestPanel2 = class {
+      constructor(parent, task) {
+        this.task = task;
+        this.names = positionalNames(task);
+        this.active = "tests";
+        this.index = 0;
+        this.message = "\u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B, \u0447\u0442\u043E\u0431\u044B \u0443\u0432\u0438\u0434\u0435\u0442\u044C \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442.";
+        const panel = parent.createDiv({ cls: "leetany-panel leetany-tests" });
+        const tabs = panel.createDiv({ cls: "leetany-panel-bar" });
+        this.tabs = {};
+        for (const [id, title, icon] of [["tests", "\u0422\u0435\u0441\u0442\u044B", "list-checks"], ["results", "\u0420\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", "terminal"]]) {
+          const button = tabs.createEl("button", { cls: "leetany-tab" });
+          setIcon2(button.createSpan(), icon);
+          button.createSpan({ text: title });
+          button.onclick = () => {
+            this.active = id;
+            this.render();
+          };
+          this.tabs[id] = button;
+        }
+        this.body = panel.createDiv({ cls: "leetany-test-body" });
+        this.summary = this.body.createDiv({ cls: "leetany-summary", attr: { "aria-live": "polite" } });
+        this.cases = this.body.createDiv({ cls: "leetany-case-list", attr: { "aria-label": "\u0412\u044B\u0431\u043E\u0440 \u0442\u0435\u0441\u0442\u0430" } });
+        this.buttons = task.tests.map((_, index) => {
+          const button = this.cases.createEl("button", { cls: "leetany-case", text: "\u0422\u0435\u0441\u0442 " + (index + 1) });
+          button.onclick = () => {
+            this.index = index;
+            this.render();
+          };
+          return button;
+        });
+        this.detail = this.body.createDiv();
+        this.render();
+      }
+      begin() {
+        this.report = null;
+        this.active = "results";
+        this.message = "\u041F\u0440\u043E\u0432\u0435\u0440\u044F\u044E\u2026";
+        this.render();
+      }
+      invalidate() {
+        if (!this.report && this.message === "\u041A\u043E\u0434 \u0438\u0437\u043C\u0435\u043D\u0451\u043D. \u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B \u0441\u043D\u043E\u0432\u0430.") return;
+        this.report = null;
+        this.message = "\u041A\u043E\u0434 \u0438\u0437\u043C\u0435\u043D\u0451\u043D. \u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B \u0441\u043D\u043E\u0432\u0430.";
+        this.render();
+      }
+      finish(report) {
+        this.report = report;
+        this.active = "results";
+        const firstFailure = report.cases?.findIndex((c) => !c.passed) ?? -1;
+        if (firstFailure >= 0) this.index = firstFailure;
+        this.render();
+        this.body.scrollTop = 0;
+      }
+      render() {
+        const results = this.active === "results";
+        for (const [id, tab] of Object.entries(this.tabs)) tab.setAttribute("aria-pressed", String(id === this.active));
+        const report = results ? this.report : null;
+        const hasCases = Boolean(report?.cases?.length);
+        this.cases.hidden = results && !hasCases;
+        this.summary.hidden = !results;
+        this.summary.empty();
+        this.detail.empty();
+        if (results) {
+          if (!report) {
+            this.summary.createDiv({ cls: "leetany-empty", text: this.message });
+            return;
+          }
+          const success = report.verdict === "PASSED";
+          const title = { PASSED: "\u041F\u0440\u0438\u043D\u044F\u0442\u043E", FAILED: "\u0422\u0435\u0441\u0442\u044B \u043D\u0435 \u043F\u0440\u043E\u0439\u0434\u0435\u043D\u044B", TIMEOUT: "\u0412\u0440\u0435\u043C\u044F \u0438\u0441\u0442\u0435\u043A\u043B\u043E", ERROR: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u043F\u0443\u0441\u043A\u0430" }[report.verdict] || report.verdict;
+          this.summary.createEl("strong", { cls: success ? "leetany-pass" : "leetany-fail", text: title });
+          if (hasCases) this.summary.createSpan({ text: "\u041F\u0440\u043E\u0439\u0434\u0435\u043D\u043E " + report.passed + " \u0438\u0437 " + report.total });
+          if (report.message) field(this.detail, "\u0421\u043E\u043E\u0431\u0449\u0435\u043D\u0438\u0435", report.message);
+          if (!hasCases) return;
+        }
+        this.buttons.forEach((button, i) => {
+          button.setAttribute("aria-pressed", String(i === this.index));
+          const outcome = report?.cases?.[i];
+          const mark = outcome ? outcome.passed ? "\u2713 " : "\u2715 " : "";
+          button.setText(mark + "\u0422\u0435\u0441\u0442 " + (i + 1));
+          button.dataset.outcome = outcome ? outcome.passed ? "pass" : "fail" : "";
+        });
+        const test = this.task.tests[this.index];
+        const actual = report?.cases?.[this.index];
+        const expected = Object.hasOwn(test, "error") ? test.error : valueText(test.expected);
+        if (actual) {
+          const returned = actual.error ? [actual.error, actual.message].filter(Boolean).join(": ") : actual.actual;
+          const comparison = this.detail.createDiv({ cls: "leetany-comparison" });
+          field(comparison, "\u0422\u0432\u043E\u0439 \u0440\u0435\u0437\u0443\u043B\u044C\u0442\u0430\u0442", returned, actual.passed ? "leetany-pass" : "leetany-fail");
+          field(comparison, "\u041E\u0436\u0438\u0434\u0430\u0435\u0442\u0441\u044F", expected);
+          if (actual.mutation) field(this.detail, "\u041E\u0448\u0438\u0431\u043A\u0430", actual.mutation, "leetany-fail");
+        }
+        if (!test.args.length) field(this.detail, "\u0410\u0440\u0433\u0443\u043C\u0435\u043D\u0442\u044B", "()");
+        test.args.forEach((arg, i) => field(this.detail, (this.names[i] || "\u0410\u0440\u0433\u0443\u043C\u0435\u043D\u0442 " + (i + 1)) + " =", valueText(arg)));
+        if (!actual) field(this.detail, "\u041E\u0436\u0438\u0434\u0430\u0435\u0442\u0441\u044F", expected);
+        if (report?.stdout) field(this.detail, "\u0412\u044B\u0432\u043E\u0434 \u043F\u0440\u043E\u0433\u0440\u0430\u043C\u043C\u044B", report.stdout);
+      }
+    };
+    module2.exports = { TestPanel: TestPanel2 };
+  }
+});
+
 // plugins/leetany/editor.js
 var require_editor = __commonJS({
   "plugins/leetany/editor.js"(exports2, module2) {
@@ -923,8 +1065,9 @@ var require_core = __commonJS({
 });
 
 // plugins/leetany/main.src.js
-var { Plugin, TextFileView, PluginSettingTab, Setting, Notice } = require("obsidian");
+var { Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon } = require("obsidian");
 var path = require("node:path");
+var { TestPanel } = require_test_panel();
 var { createPythonEditor } = require_editor();
 var { parseExerciseFile, runTests, fingerprint, isComplete } = require_core();
 var PracticeView = class extends TextFileView {
@@ -981,7 +1124,11 @@ var PracticeView = class extends TextFileView {
     this.index = Math.min(this.index, courses.length - 1);
     const task = courses[this.index];
     const grid = root.createDiv({ cls: "leetany-grid" });
-    const left = grid.createDiv({ cls: "leetany-problem" });
+    const description = grid.createDiv({ cls: "leetany-panel leetany-description" });
+    const heading = description.createDiv({ cls: "leetany-panel-bar" });
+    setIcon(heading.createSpan(), "file-text");
+    heading.createSpan({ text: "\u0423\u0441\u043B\u043E\u0432\u0438\u0435" });
+    const left = description.createDiv({ cls: "leetany-problem" });
     if (courses.length > 1) {
       const select = left.createEl("select", { attr: { "aria-label": "\u0417\u0430\u0434\u0430\u0447\u0430" } });
       courses.forEach((e, i) => {
@@ -1000,32 +1147,27 @@ var PracticeView = class extends TextFileView {
       left.createEl("h3", { text: "\u041F\u0440\u0438\u043C\u0435\u0440" });
       left.createEl("pre", { cls: "leetany-example", text: task.example });
     }
-    const cases = left.createEl("details", { cls: "leetany-cases" });
-    cases.createEl("summary", { text: "\u0422\u0435\u0441\u0442\u044B (" + task.tests.length + ")" });
-    const list = cases.createEl("ol");
-    for (const test of task.tests) {
-      const row = list.createEl("li");
-      row.createEl("code", { text: "\u0410\u0440\u0433\u0443\u043C\u0435\u043D\u0442\u044B: " + JSON.stringify(test.args) });
-      row.createEl("div", { cls: "leetany-expected", text: Object.hasOwn(test, "error") ? "\u0418\u0441\u043A\u043B\u044E\u0447\u0435\u043D\u0438\u0435: " + test.error : "\u041E\u0436\u0438\u0434\u0430\u0435\u0442\u0441\u044F: " + JSON.stringify(test.expected) });
-    }
     const right = grid.createDiv({ cls: "leetany-work" });
-    const bar = right.createDiv({ cls: "leetany-toolbar" });
-    bar.createEl("h3", { text: "Python" });
-    const run = bar.createEl("button", { text: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u0442\u0435\u0441\u0442\u044B", cls: "mod-cta" });
-    const surface = right.createDiv({ cls: "leetany-editor" });
-    const output = right.createEl("pre", { cls: "leetany-result", attr: { "aria-live": "polite" } });
+    const codePanel = right.createDiv({ cls: "leetany-panel leetany-code-panel" });
+    const bar = codePanel.createDiv({ cls: "leetany-panel-bar" });
+    setIcon(bar.createSpan(), "code-xml");
+    bar.createSpan({ text: "\u041A\u043E\u0434" });
+    bar.createSpan({ text: "Python", cls: "leetany-language" });
+    const run = bar.createEl("button", { text: "\u0417\u0430\u043F\u0443\u0441\u0442\u0438\u0442\u044C \u0442\u0435\u0441\u0442\u044B", cls: "leetany-run" });
+    const surface = codePanel.createDiv({ cls: "leetany-editor" });
+    const panel = new TestPanel(right, task);
     const editor = createPythonEditor(surface, task.solution ?? task.starter, (code) => {
       task.solution = code;
       this.raw = JSON.stringify(this.course, null, 2) + "\n";
       this.requestSave();
-      output.textContent = "";
+      panel.invalidate();
     });
     this.editor = editor;
     run.onclick = async () => {
       const code = editor.state.doc.toString();
       const signature = fingerprint(task);
       run.disabled = true;
-      output.textContent = "\u041F\u0440\u043E\u0432\u0435\u0440\u044F\u044E\u2026";
+      panel.begin();
       try {
         await this.save();
         const file = path.join(this.app.vault.adapter.getBasePath(), this.plugin.manifest.dir, "runner.py");
@@ -1036,13 +1178,9 @@ var PracticeView = class extends TextFileView {
           this.raw = JSON.stringify(this.course, null, 2) + "\n";
           await this.save();
         }
-        output.textContent = editor.state.doc.toString() === code ? [
-          report.verdict + " " + report.passed + "/" + report.total,
-          report.message,
-          ...(report.cases || []).map((c) => c.passed ? "\u2713 " + c.case : "\u2717 " + JSON.stringify(c))
-        ].filter(Boolean).join("\n") : "\u041A\u043E\u0434 \u0438\u0437\u043C\u0435\u043D\u0451\u043D. \u0417\u0430\u043F\u0443\u0441\u0442\u0438 \u0442\u0435\u0441\u0442\u044B \u0441\u043D\u043E\u0432\u0430.";
+        if (this.editor === editor && fingerprint(task) === signature) panel.finish(report);
       } catch (err) {
-        output.textContent = err.message;
+        if (this.editor === editor && fingerprint(task) === signature) panel.finish({ verdict: "ERROR", message: err.message });
       } finally {
         run.disabled = false;
       }

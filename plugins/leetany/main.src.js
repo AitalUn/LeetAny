@@ -1,6 +1,7 @@
 'use strict';
-const {Plugin, TextFileView, PluginSettingTab, Setting, Notice} = require('obsidian');
+const {Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon} = require('obsidian');
 const path = require('node:path');
+const {TestPanel} = require('./test-panel');
 const {createPythonEditor} = require('./editor');
 const {parseExerciseFile, runTests, fingerprint, isComplete} = require('./core');
 
@@ -27,7 +28,11 @@ class PracticeView extends TextFileView {
     this.index = Math.min(this.index, courses.length-1);
     const task = courses[this.index];
     const grid = root.createDiv({cls:'leetany-grid'});
-    const left = grid.createDiv({cls:'leetany-problem'});
+    const description = grid.createDiv({cls:'leetany-panel leetany-description'});
+    const heading = description.createDiv({cls:'leetany-panel-bar'});
+    setIcon(heading.createSpan(),'file-text');
+    heading.createSpan({text:'Условие'});
+    const left = description.createDiv({cls:'leetany-problem'});
     if (courses.length > 1) {
       const select = left.createEl('select',{attr:{'aria-label':'Задача'}});
       courses.forEach((e,i)=>{const opt=select.createEl('option',{text:e.title});opt.value=String(i);});
@@ -40,32 +45,26 @@ class PracticeView extends TextFileView {
       left.createEl('h3',{text:'Пример'});
       left.createEl('pre',{cls:'leetany-example',text:task.example});
     }
-    const cases=left.createEl('details',{cls:'leetany-cases'});
-    cases.createEl('summary',{text:'Тесты ('+task.tests.length+')'});
-    const list=cases.createEl('ol');
-    for(const test of task.tests) {
-      const row=list.createEl('li');
-      row.createEl('code',{text:'Аргументы: '+JSON.stringify(test.args)});
-      row.createEl('div',{cls:'leetany-expected',text:Object.hasOwn(test,'error')
-        ? 'Исключение: '+test.error : 'Ожидается: '+JSON.stringify(test.expected)});
-    }
     const right=grid.createDiv({cls:'leetany-work'});
-    const bar=right.createDiv({cls:'leetany-toolbar'});
-    bar.createEl('h3',{text:'Python'});
-    const run=bar.createEl('button',{text:'Запустить тесты',cls:'mod-cta'});
-    const surface=right.createDiv({cls:'leetany-editor'});
-    const output=right.createEl('pre',{cls:'leetany-result',attr:{'aria-live':'polite'}});
+    const codePanel=right.createDiv({cls:'leetany-panel leetany-code-panel'});
+    const bar=codePanel.createDiv({cls:'leetany-panel-bar'});
+    setIcon(bar.createSpan(),'code-xml');
+    bar.createSpan({text:'Код'});
+    bar.createSpan({text:'Python',cls:'leetany-language'});
+    const run=bar.createEl('button',{text:'Запустить тесты',cls:'leetany-run'});
+    const surface=codePanel.createDiv({cls:'leetany-editor'});
+    const panel=new TestPanel(right,task);
     const editor=createPythonEditor(surface,task.solution ?? task.starter,code=>{
       task.solution=code;
       this.raw=JSON.stringify(this.course,null,2)+'\n';
       this.requestSave();
-      output.textContent='';
+      panel.invalidate();
     });
     this.editor=editor;
     run.onclick=async()=>{
       const code=editor.state.doc.toString();
       const signature=fingerprint(task);
-      run.disabled=true;output.textContent='Проверяю…';
+      run.disabled=true;panel.begin();
       try {
         await this.save();
         const file=path.join(this.app.vault.adapter.getBasePath(),this.plugin.manifest.dir,'runner.py');
@@ -76,9 +75,10 @@ class PracticeView extends TextFileView {
           this.raw=JSON.stringify(this.course,null,2)+'\n';
           await this.save();
         }
-        output.textContent=editor.state.doc.toString()===code ? [report.verdict+' '+report.passed+'/'+report.total,report.message,
-          ...(report.cases||[]).map(c=>c.passed?'✓ '+c.case:'✗ '+JSON.stringify(c))].filter(Boolean).join('\n') : 'Код изменён. Запусти тесты снова.';
-      } catch(err) {output.textContent=err.message;} finally {run.disabled=false;}
+        if (this.editor === editor && fingerprint(task) === signature) panel.finish(report);
+      } catch(err) {
+        if (this.editor === editor && fingerprint(task) === signature) panel.finish({verdict:'ERROR',message:err.message});
+      } finally {run.disabled=false;}
     };
   }
 }
