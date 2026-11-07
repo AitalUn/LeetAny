@@ -10,7 +10,7 @@ Install Obsidian Desktop and Python 3.10+. Open the target vault in Obsidian onc
 python3 scripts/install_leetany.py --vault "/path/to/your/vault" --enable
 ```
 
-In Obsidian Settings → Community plugins, enable community plugins for this vault and reload Obsidian. Open **Courses → LLM → 99 Практикум.leetany**. The included Russian-language course has 16 numbered lessons and one final practice file with 16 exercises. The installer keeps existing lessons and solutions. Existing v0.1 Markdown solutions stay in their original files and can be copied into the new editor.
+In Obsidian Settings → Community plugins, enable community plugins for this vault and reload Obsidian. Open **Courses → LLM → 99 Практикум.leetany**. The included Russian-language course has 16 numbered lessons and one final practice file with 16 exercises. If you have moved this course to `Обучение/LLM/`, the installer finds its `99 Практикум.leetany` there and reuses that folder. The installer keeps existing lessons and solutions. Existing v0.1 Markdown solutions stay in their original files and can be copied into the new editor.
 
 ## Write a course
 

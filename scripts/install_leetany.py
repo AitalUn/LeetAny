@@ -12,13 +12,16 @@ FILES=['manifest.json','main.js','core.js','styles.css','runner.py','worker.py',
 def install(vault,enable=False):
     vault=Path(vault).resolve()
     if not (vault/'.obsidian').is_dir():raise ValueError('Это не Obsidian vault: нет .obsidian/')
-    for folder in ('Courses',):
-        for source_file in (SOURCE.parents[1]/folder).rglob('*'):
-            if source_file.is_file():
-                dest=vault/source_file.relative_to(SOURCE.parents[1])
-                if not dest.exists():
-                    dest.parent.mkdir(parents=True,exist_ok=True)
-                    shutil.copy2(source_file,dest)
+    bundled=SOURCE.parents[1]/'Courses'/'LLM'
+    destination=vault/'Обучение'/'LLM'
+    if not (destination/'99 Практикум.leetany').is_file():
+        destination=vault/'Courses'/'LLM'
+    for source_file in bundled.rglob('*'):
+        if source_file.is_file():
+            dest=destination/source_file.relative_to(bundled)
+            if not dest.exists():
+                dest.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copy2(source_file,dest)
     target=vault/'.obsidian/plugins/leetany';target.mkdir(parents=True,exist_ok=True)
     for file in FILES:
         shutil.copy2(SOURCE/file,target/file)
