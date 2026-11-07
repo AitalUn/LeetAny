@@ -1,0 +1,14 @@
+.leetany { padding: 20px 16px; overflow-y: auto; }
+.leetany .ll-eyebrow {font-size:11px;letter-spacing:.12em;color:var(--text-accent);font-weight:650;}
+.leetany h2 {margin-top:8px;font-size:24px;}
+.leetany .ll-muted {color:var(--text-muted);font-size:12px;line-height:1.6;}
+.leetany .ll-select {width:100%;height:auto;min-height:36px;margin:12px 0;}
+.leetany .ll-card {border:1px solid var(--background-modifier-border);border-radius:12px;padding:16px;background:var(--background-secondary);}
+.leetany .ll-card h3 {margin-top:0;font-size:17px;}
+.leetany .ll-status {font-size:12px;font-weight:600;margin-top:12px;}
+.leetany .ll-actions {display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0;}
+.leetany .ll-actions button {white-space:normal;min-height:36px;height:auto;padding:8px;}
+.leetany .ll-footnote {font-size:11px;line-height:1.6;color:var(--text-faint);}
+.leetany .ll-output {font-size:12px;white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:var(--background-secondary);border-radius:8px;max-height:400px;overflow:auto;}
+.leetany .ll-error {color:var(--text-error);}
+.leetany .ll-progress {padding:12px;border-left:3px solid var(--interactive-accent);font-size:12px;}

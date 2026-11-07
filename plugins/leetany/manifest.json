@@ -1,0 +1,9 @@
+{
+  "id": "leetany",
+  "name": "LeetAny",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "Теория, свои Python-задачи, локальные тесты и отдельное ревью через Codex CLI.",
+  "author": "AitalUn",
+  "isDesktopOnly": true
+}
