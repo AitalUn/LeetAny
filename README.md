@@ -6,7 +6,17 @@ The Description tab shows the exercise difficulty and a link to its lesson when 
 
 Under the editor, **Testcase** shows the fixed inputs and expected answer for each case. Running the code opens **Test Result** and selects the first failing case, with the actual and expected answers side by side. Editing the solution clears the previous report.
 
-## Install
+## Install and try an exercise
+
+Requires Obsidian Desktop 1.15.0 or later and a local Python 3.10+ installation. For manual installation, download `main.js`, `manifest.json` and `styles.css` from the [GitHub release](https://github.com/AitalUn/LeetAny/releases/latest). Put all three files in `<vault>/.obsidian/plugins/leetany/`, reload Obsidian and enable LeetAny in Settings → Community plugins.
+
+1. Run **LeetAny: Add sample LLM course** in the command palette. It creates course notes and exercises in your vault, preserving existing files.
+2. Open **01а Бюджет контекста.leetany**, edit the starter and click **Run tests**. If Python is not on your PATH, enter its absolute executable path in the plugin settings.
+3. To create more exercises with your own agent, run **LeetAny: Install course authoring skill**. This writes the skill and short project instructions into your vault on request.
+
+LeetAny runs offline. When you click **Run tests**, it starts your installed Python interpreter and uses temporary files outside the vault for the local test worker. Submitted Python code runs with your operating system permissions. Run code you trust. The optional agent workflow uses the agent you configure separately.
+
+### Install from source
 
 Install Obsidian Desktop and Python 3.10+. Open the target vault in Obsidian once so its `.obsidian` folder exists. [Download the source ZIP](https://github.com/AitalUn/LeetAny/archive/refs/heads/main.zip), extract it, and open a terminal in the extracted folder containing `scripts/`. Alternatively clone this repository and enter the checkout. Replace the example path below with the absolute path to your vault.
 

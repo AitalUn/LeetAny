@@ -1,9 +1,0 @@
-{
-  "id": "leetany",
-  "name": "LeetAny",
-  "version": "0.2.0",
-  "minAppVersion": "1.5.0",
-  "description": "Open course exercises in a split problem and Python editor, and run local tests.",
-  "author": "AitalUn",
-  "isDesktopOnly": true
-}

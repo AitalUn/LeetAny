@@ -8,7 +8,7 @@ import sys
 import tempfile
 
 SOURCE=Path(__file__).resolve().parents[1]/'plugins/leetany'
-FILES=['manifest.json','main.js','core.js','styles.css','runner.py','worker.py','agent-hint.md']
+FILES=['main.js','styles.css']
 
 def add_missing_metadata(source, target):
     # Upgrade only exercises that still have the shipped contract.
@@ -59,6 +59,7 @@ def install(vault,enable=False):
             elif dest.suffix == '.leetany':
                 add_missing_metadata(source_file, dest)
     target=vault/'.obsidian/plugins/leetany';target.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(SOURCE.parents[1]/'manifest.json',target/'manifest.json')
     for file in FILES:
         shutil.copy2(SOURCE/file,target/file)
     skill=SOURCE.parents[1]/'.agents/skills/leetany-course/SKILL.md'

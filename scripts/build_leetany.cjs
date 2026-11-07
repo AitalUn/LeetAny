@@ -12,6 +12,12 @@ buildSync({
   entryPoints: ['plugins/leetany/main.src.js'],
   outfile: 'plugins/leetany/main.js',
   bundle: true,
+  loader: {'.py': 'text', '.md': 'text'},
+  define: {LEETANY_SAMPLE_COURSE: JSON.stringify(Object.fromEntries(
+    fs.readdirSync(path.join(root, 'Courses/LLM')).sort()
+      .filter(name => name.endsWith('.md') || name.endsWith('.leetany'))
+      .map(name => [name, fs.readFileSync(path.join(root, 'Courses/LLM', name), 'utf8')])
+  ))},
   format: 'cjs',
   platform: 'node',
   target: 'es2021',

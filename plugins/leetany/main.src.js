@@ -1,10 +1,12 @@
 'use strict';
 const {Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon} = require('obsidian');
-const path = require('node:path');
+const {runBundledTests} = require('./bundled-runner');
+const skill = require('../../.agents/skills/leetany-course/SKILL.md');
+const hint = require('./agent-hint.md');
 const {showDescription} = require('./description');
 const {TestPanel} = require('./test-panel');
 const {createPythonEditor} = require('./editor');
-const {parseExerciseFile, runTests, fingerprint, isComplete} = require('./core');
+const {parseExerciseFile, fingerprint, isComplete} = require('./core');
 
 class PracticeView extends TextFileView {
   constructor(leaf, plugin) { super(leaf); this.plugin = plugin; this.index = 0; }
@@ -37,7 +39,7 @@ class PracticeView extends TextFileView {
     setIcon(bar.createSpan(),'code-xml');
     bar.createSpan({text:'Code'});
     bar.createSpan({text:'Python',cls:'leetany-language'});
-    const run=bar.createEl('button',{text:'Run Tests',cls:'leetany-run'});
+    const run=bar.createEl('button',{text:'Run tests',cls:'leetany-run'});
     const surface=codePanel.createDiv({cls:'leetany-editor'});
     const panel=new TestPanel(right,task);
     const editor=createPythonEditor(surface,task.solution ?? task.starter,code=>{
@@ -53,8 +55,7 @@ class PracticeView extends TextFileView {
       run.disabled=true;panel.begin();
       try {
         await this.save();
-        const file=path.join(this.app.vault.adapter.getBasePath(),this.plugin.manifest.dir,'runner.py');
-        const report=await runTests(this.plugin.settings.pythonPath,file,task,code);
+        const report=await runBundledTests(this.plugin.settings.pythonPath,task,code);
         if(this.course?.exercises.includes(task) && fingerprint(task)===signature) {
           if(report.verdict==='PASSED') task.passedHash=signature;
           else delete task.passedHash;
@@ -73,10 +74,24 @@ module.exports = class LeetAny extends Plugin {
     this.settings={pythonPath:'python3',...await this.loadData()};
     this.registerView('leetany-practice',leaf=>new PracticeView(leaf,this));
     this.registerExtensions(['leetany'],'leetany-practice');
+    this.addCommand({id:'add-sample-course',name:'Add sample LLM course',callback:async()=>{
+      try {
+        const vault=this.app.vault;
+        const folder=vault.getFolderByPath('Обучение/LLM') ? 'Обучение/LLM' : 'Courses/LLM';
+        const parent=folder.split('/')[0];
+        if (!vault.getFolderByPath(parent)) await vault.createFolder(parent);
+        if (!vault.getFolderByPath(folder)) await vault.createFolder(folder);
+        for (const [name, text] of Object.entries(LEETANY_SAMPLE_COURSE)) {
+          const path=folder+'/'+name;
+          if (!vault.getAbstractFileByPath(path)) await vault.create(path,text);
+        }
+        new Notice('Sample exercises are available in '+folder);
+      } catch(error) { new Notice(error.message); }
+    }});
     this.addCommand({id:'install-course-skill',name:'Install course authoring skill',callback:async()=>{
       try {
         const adapter=this.app.vault.adapter;
-        const skill=await adapter.read(this.manifest.dir+'/SKILL.md');
+
         const kept=[];
         for(const root of ['.agents','.claude']) {
           const folder=root+'/skills/leetany-course';
@@ -93,7 +108,6 @@ module.exports = class LeetAny extends Plugin {
             else kept.push(file);
           }
         }
-        const hint=await adapter.read(this.manifest.dir+'/agent-hint.md');
         const marker=hint.split(/\r?\n/)[0];
         for(const filename of ['AGENTS.md','CLAUDE.md']) {
           const file=this.app.vault.getAbstractFileByPath(filename);
