@@ -14,7 +14,7 @@ Reload Obsidian with community plugins enabled. Open **Courses → LLM → 99 П
 
 ## Use your own agent
 
-Open your vault with your usual agent and ask it to create lessons and a final practice file on a topic. The installer appends the [authoring instructions](CLAUDE.md) once to the vault's CLAUDE.md. The plugin command **Добавить инструкции в CLAUDE.md** can also add this block. For an agent with a different instructions filename, reference CLAUDE.md from its project instructions. Each course is independent of a central catalog. The desktop plugin runs local Python only when you click Run. Use code you trust; execution has your OS permissions.
+Open the vault as a project in Codex or Claude Code and ask for a LeetAny course on a topic. The installer places the [leetany-course skill](.agents/skills/leetany-course/SKILL.md) in the project skill directories for both agents. The description is used for discovery; the authoring instructions are loaded when selected. To explicitly invoke it, use `$leetany-course` in Codex or `/leetany-course` in Claude Code. In Obsidian, the command **Установить skill для создания курсов** restores missing copies and preserves customized ones. Each course is independent of a central catalog. The desktop plugin runs local Python only when you click Run. Use code you trust; execution has your OS permissions.
 
 ## Develop
 

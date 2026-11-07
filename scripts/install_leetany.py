@@ -1,4 +1,5 @@
 """Copy the versioned plugin into a local Obsidian vault; keep user settings."""
+import hashlib
 import argparse
 import json
 from pathlib import Path
@@ -21,7 +22,14 @@ def install(vault,enable=False):
     target=vault/'.obsidian/plugins/leetany';target.mkdir(parents=True,exist_ok=True)
     for file in FILES:
         shutil.copy2(SOURCE/file,target/file)
-    shutil.copy2(SOURCE.parents[1]/'CLAUDE.md',target/'CLAUDE.md')
+    skill=SOURCE.parents[1]/'.agents/skills/leetany-course/SKILL.md'
+    for destination in [target/'SKILL.md', *(vault/root/'skills/leetany-course/SKILL.md' for root in ('.agents','.claude'))]:
+        destination.parent.mkdir(parents=True,exist_ok=True)
+        if destination == target/'SKILL.md' or not destination.exists():
+            shutil.copy2(skill,destination)
+        elif destination.read_bytes()!=skill.read_bytes():
+            print(f'Keeping customized skill: {destination}')
+
     settings=target/'data.json'
     values=json.loads(settings.read_text()) if settings.exists() else {}
     values.setdefault('pythonPath',sys.executable)
@@ -29,10 +37,20 @@ def install(vault,enable=False):
     values.pop('catalog',None)
     settings.write_text(json.dumps(values,ensure_ascii=False,indent=2))
     instructions=vault/'CLAUDE.md'
-    guide=(SOURCE.parents[1]/'CLAUDE.md').read_text()
-    existing=instructions.read_text() if instructions.exists() else ''
-    if '<!-- leetany:begin -->' not in existing:
-        with instructions.open('a') as stream: stream.write(('\n\n' if existing else '')+guide)
+    # Remove only the exact instruction block installed by v0.2.0.
+    if instructions.exists():
+        text=instructions.read_bytes()
+        begin=text.find(b'<!-- leetany:begin -->')
+        finish=text.find(b'<!-- leetany:end -->',begin)
+        if begin>=0 and finish>=begin:
+            end=finish+len(b'<!-- leetany:end -->')
+            block=text[begin:end].replace(b'\r\n',b'\n')
+            if hashlib.sha256(block).hexdigest()=='6dc6e7f5326cb8c107005449cda2be7327b4270dd0e1005d99dcd09ed72c0c42':
+                remaining=text[:begin]+text[end:]
+                if remaining.strip():
+                    instructions.write_bytes(remaining)
+                else:
+                    instructions.unlink()
     if enable:
         config=vault/'.obsidian/community-plugins.json'
         enabled=json.loads(config.read_text()) if config.exists() else []

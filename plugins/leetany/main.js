@@ -123,13 +123,21 @@ module.exports = class LeetAny extends Plugin {
     this.settings={pythonPath:'python3',...await this.loadData()};
     this.registerView('leetany-practice',leaf=>new PracticeView(leaf,this));
     this.registerExtensions(['leetany'],'leetany-practice');
-    this.addCommand({id:'agent-instructions',name:'Добавить инструкции в CLAUDE.md',callback:async()=>{
+    this.addCommand({id:'install-course-skill',name:'Установить skill для создания курсов',callback:async()=>{
       try {
-        const guide=await this.app.vault.adapter.read(this.manifest.dir+'/CLAUDE.md');
-        const existing=this.app.vault.getAbstractFileByPath('CLAUDE.md');
-        if(existing) await this.app.vault.process(existing,text=>text.includes('<!-- leetany:begin -->')?text:text+'\n\n'+guide);
-        else await this.app.vault.create('CLAUDE.md',guide);
-        new Notice('Инструкции LeetAny доступны в CLAUDE.md');
+        const adapter=this.app.vault.adapter;
+        const skill=await adapter.read(this.manifest.dir+'/SKILL.md');
+        const kept=[];
+        for(const root of ['.agents','.claude']) {
+          const folder=root+'/skills/leetany-course';
+          for(const dir of [root,root+'/skills',folder]) {
+            if(!await adapter.exists(dir)) await adapter.mkdir(dir);
+          }
+          const file=folder+'/SKILL.md';
+          if(!await adapter.exists(file)) await adapter.write(file,skill);
+          else if(await adapter.read(file)!==skill) kept.push(file);
+        }
+        new Notice(kept.length?'Сохранены локальные версии: '+kept.join(', '):'Skill leetany-course установлен');
       } catch(error) {new Notice(error.message);}
     }});
     this.app.workspace.onLayoutReady(()=>this.setupBadges());
