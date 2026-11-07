@@ -9,6 +9,7 @@ import traceback
 
 def equal(a,b):
     if isinstance(a,bool) or isinstance(b,bool): return type(a) is type(b) and a==b
+    if type(a) is int and type(b) is int: return a==b
     if isinstance(a,(int,float)) and isinstance(b,(int,float)):
         return math.isfinite(a) and math.isfinite(b) and math.isclose(a,b,rel_tol=1e-8,abs_tol=1e-8)
     if isinstance(a,dict) and isinstance(b,dict):

@@ -1,6 +1,6 @@
 'use strict';
 const {setIcon, TFile} = require('obsidian');
-const {renderPythonExample} = require('./editor');
+const {renderExample} = require('./editor');
 
 const levels = {easy:'Easy', medium:'Medium', hard:'Hard'};
 
@@ -27,7 +27,7 @@ function showDescription(panel, view, task, tasks) {
     addTab('Solution','book-open',answer);
     answer.createEl('h2',{text:'Solution'});
     if (editorial.explanation) answer.createEl('p',{cls:'leetany-statement',text:editorial.explanation});
-    renderPythonExample(answer.createEl('pre',{cls:'leetany-reference'}).createEl('code'),editorial.code);
+    renderExample(answer.createEl('pre',{cls:'leetany-reference'}).createEl('code'),task.language ?? 'python',editorial.code);
   }
   answer.hidden = true;
   for (const {button,page} of tabs) button.setAttribute('aria-pressed',String(page === problem));

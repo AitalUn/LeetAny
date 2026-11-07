@@ -1,6 +1,6 @@
 # LeetAny
 
-LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit syntax-highlighted Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, each exercise has its own ✅ when its current code passes its tests, or ❌ until then.
+LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit syntax-highlighted Python, C++, Rust or Go on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, each exercise has its own ✅ when its current code passes its tests, or ❌ until then.
 
 Drag the vertical divider to resize the description and editor. LeetAny remembers the width for future exercises. Double-click the divider to return to equal columns.
 
@@ -16,7 +16,7 @@ Requires Obsidian Desktop 1.15.0 or later and a local Python 3.10+ installation.
 2. Open **01а Бюджет контекста.leetany**, edit the starter and click **Run tests**. If Python is not on your PATH, enter its absolute executable path in the plugin settings.
 3. To create more exercises with your own agent, run **LeetAny: Install course authoring skill**. This writes the skill and short project instructions into your vault on request.
 
-LeetAny runs offline. When you click **Run tests**, it starts your installed Python interpreter and uses temporary files outside the vault for the local test worker. Submitted Python code runs with your operating system permissions. Run code you trust. The optional agent workflow uses the agent you configure separately.
+LeetAny runs offline. When you click **Run tests**, the Python coordinator uses temporary files outside the vault, executes the Python worker or builds and runs the native exercise. Only run trusted course configurations, harnesses and solutions: they execute with your OS permissions. Dependencies and toolchains are prepared separately by the author or agent. The optional agent workflow uses the agent you configure separately.
 
 ### Install from source
 
@@ -27,6 +27,30 @@ python3 scripts/install_leetany.py --vault "/path/to/your/vault" --enable
 ```
 
 In Obsidian Settings → Community plugins, enable community plugins for this vault and reload Obsidian. Open **Courses → LLM → 01а Бюджет контекста.leetany**. Each of the 16 lessons has a neighboring exercise file. If your course lives in `Обучение/LLM/`, the installer uses that folder. Reinstalling adds missing difficulty, lesson links and editorials to exercises whose shipped contract still matches. Existing lessons and learner solutions are preserved. Vaults with an older combined practice file keep that course layout during a reinstall. Existing v0.1 Markdown solutions stay in their original files and can be copied into the new editor.
+
+## Course environments and languages
+
+Install the authoring skill and ask your agent, for example: “Build a PyTorch course, prepare its environment and verify each reference solution.” The skill includes a setup/check CLI and runnable C++, Rust and Go exercise templates. Keep `leetany.course.json` in the same folder as the exercise files:
+
+```json
+{
+  "version": 1,
+  "python": {"venv": ".venv", "requirements": "requirements.txt", "timeoutSeconds": 60}
+}
+```
+
+In a vault with the skill installed, an agent can run:
+
+```sh
+python3 .agents/skills/leetany-course/scripts/course_runner.py setup "Courses/DL"
+python3 .agents/skills/leetany-course/scripts/course_runner.py check "Courses/DL/01a Tensor sum.leetany" --reference
+```
+
+Setup uses the Python that launches it to create the venv and install the course requirements. Run tests uses that venv; on a second device recreate it with setup. Commit dependency declarations. Ignore the environment directory and machine-specific `leetany.local.json`. A course without these files uses the configured Python as before. Python 3.10+ is also required to coordinate native builds.
+
+For native tasks set `language` to `cpp`, `rust` or `go` inside the exercise and provide a `harness` that calls the student's function. Use the [working templates](.agents/skills/leetany-course/examples). Each run compiles once, executes the binary per case and compares its JSON result against the existing tests. Compilation errors appear in Test Result. Native inputs are one JSON value per argument per line; the harness prints exactly one JSON object containing `value` or a named `error`. Set the ordered argument names in `parameters` for labeled inputs. Supply typed decoding for the exercise's signature in the harness; compare expected answers in LeetAny.
+
+Default toolchains: `c++` (C++17), `rustc` (Rust 2021), and `go build`. Configure these in the language section of the course manifest. A native `prepare` argv runs **only** on explicit setup; a custom `build` argv supports libraries and build systems. It must create `{exe}` from `{driver}` and `{solution}`; `{course}` and `{work}` are also available. Example: `"go":{"prepare":["go","mod","download"]}`. Setup records native tool paths in the local manifest so the desktop app can find the same compilers as the agent. Use `env` for per-language SDK paths. `timeoutSeconds` and `buildTimeoutSeconds` control execution and compilation respectively (up to 600 seconds). See the [skill](.agents/skills/leetany-course/SKILL.md) for the full authoring workflow.
 
 ## Write a course
 
@@ -44,7 +68,7 @@ In each lesson, work through a small example and link to the neighboring exercis
 
 ## Use your own agent
 
-Open the vault as a project in Codex or Claude Code and ask for a LeetAny course on a topic. The installer places the [leetany-course skill](.agents/skills/leetany-course/SKILL.md) in the project skill directories for both agents. The installer also adds a short pointer in the vault’s AGENTS.md and CLAUDE.md and preserves other instructions. The description is used for discovery; the authoring instructions are loaded when selected. To explicitly invoke it, use `$leetany-course` in Codex or `/leetany-course` in Claude Code. In Obsidian, the command **Install course authoring skill** restores missing copies and preserves customized ones. Each course is independent of a central catalog. The desktop plugin runs local Python only when you click Run. Use code you trust; execution has your OS permissions.
+Open the vault as a project in Codex or Claude Code and ask for a LeetAny course on a topic. The installer places the [leetany-course skill](.agents/skills/leetany-course/SKILL.md) in the project skill directories for both agents. The installer also adds a short pointer in the vault’s AGENTS.md and CLAUDE.md and preserves other instructions. The description is used for discovery; the authoring instructions are loaded when selected. To explicitly invoke it, use `$leetany-course` in Codex or `/leetany-course` in Claude Code. In Obsidian, the command **Install course authoring skill** restores missing copies and preserves customized ones. Each course is independent of a central catalog. The desktop plugin starts builds and tests only when you click Run tests. Use code you trust; execution has your OS permissions.
 
 ## Develop
 

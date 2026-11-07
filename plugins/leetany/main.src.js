@@ -1,13 +1,14 @@
 'use strict';
 const {Plugin, TextFileView, PluginSettingTab, Setting, Notice, setIcon} = require('obsidian');
-const {runBundledTests} = require('./bundled-runner');
+const path = require('node:path');
+const {runBundledTests, scripts} = require('./bundled-runner');
 const skill = require('../../.agents/skills/leetany-course/SKILL.md');
 const hint = require('./agent-hint.md');
 const {addColumnSplitter} = require('./splitter');
 const {showDescription} = require('./description');
 const {TestPanel} = require('./test-panel');
-const {createPythonEditor} = require('./editor');
-const {parseExerciseFile, fingerprint, isComplete} = require('./core');
+const {createCodeEditor} = require('./editor');
+const {languageNames, parseExerciseFile, fingerprint, isComplete} = require('./core');
 
 class PracticeView extends TextFileView {
   constructor(leaf, plugin) { super(leaf); this.plugin = plugin; this.index = 0; }
@@ -31,6 +32,7 @@ class PracticeView extends TextFileView {
     const courses = this.course.exercises;
     this.index = Math.min(this.index, courses.length-1);
     const task = courses[this.index];
+    const language=task.language ?? 'python';
     const grid = root.createDiv({cls:'leetany-grid'});
     const description = grid.createDiv({cls:'leetany-panel leetany-description'});
     showDescription(description,this,task,courses);
@@ -43,11 +45,11 @@ class PracticeView extends TextFileView {
     const bar=codePanel.createDiv({cls:'leetany-panel-bar'});
     setIcon(bar.createSpan(),'code-xml');
     bar.createSpan({text:'Code'});
-    bar.createSpan({text:'Python',cls:'leetany-language'});
+    bar.createSpan({text:languageNames[language],cls:'leetany-language'});
     const run=bar.createEl('button',{text:'Run tests',cls:'leetany-run'});
     const surface=codePanel.createDiv({cls:'leetany-editor'});
     const panel=new TestPanel(right,task);
-    const editor=createPythonEditor(surface,task.solution ?? task.starter,code=>{
+    const editor=createCodeEditor(surface,language,task.solution ?? task.starter,code=>{
       task.solution=code;
       this.raw=JSON.stringify(this.course,null,2)+'\n';
       this.requestSave();
@@ -59,8 +61,9 @@ class PracticeView extends TextFileView {
       const signature=fingerprint(task);
       run.disabled=true;panel.begin();
       try {
+        const directory=path.dirname(this.app.vault.adapter.getFullPath(this.file.path));
         await this.save();
-        const report=await runBundledTests(this.plugin.settings.pythonPath,task,code);
+        const report=await runBundledTests(this.plugin.settings.pythonPath,directory,task,code);
         if(this.course?.exercises.includes(task) && fingerprint(task)===signature) {
           if(report.verdict==='PASSED') task.passedHash=signature;
           else delete task.passedHash;
@@ -109,8 +112,20 @@ module.exports = class LeetAny extends Plugin {
             const existing=await adapter.read(file);
             if(existing===skill) continue;
             const hash=require('node:crypto').createHash('sha256').update(existing.replace(/\r\n/g,'\n')).digest('hex');
-            if(['938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84','15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f'].includes(hash)) await adapter.write(file,skill);
+            if(['938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84','15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f','1a9604d4929a06517d5ce92265239d40a241695a3538729ccd92250164176a75'].includes(hash)) await adapter.write(file,skill);
             else kept.push(file);
+          }
+        }
+        for (const root of ['.agents','.claude']) {
+          const folder=root+'/skills/leetany-course';
+          for (const [subdir, files] of [['scripts',scripts],['examples',LEETANY_NATIVE_EXAMPLES]]) {
+            const dir=folder+'/'+subdir;
+            if (!await adapter.exists(dir)) await adapter.mkdir(dir);
+            for (const [name, content] of Object.entries(files)) {
+              const file=dir+'/'+name;
+              if (!await adapter.exists(file)) await adapter.write(file,content);
+              else if (await adapter.read(file)!==content) kept.push(file);
+            }
           }
         }
         const marker=hint.split(/\r?\n/)[0];

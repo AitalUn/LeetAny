@@ -6,7 +6,7 @@ import unittest
 
 ROOT=Path(__file__).resolve().parents[1]
 def module(name):
-    spec=importlib.util.spec_from_file_location(name,ROOT/f'plugins/leetany/{name}.py')
+    spec=importlib.util.spec_from_file_location(name,ROOT/f'.agents/skills/leetany-course/scripts/{name}.py')
     obj=importlib.util.module_from_spec(spec);spec.loader.exec_module(obj);return obj
 runner=module('runner');worker=module('worker')
 

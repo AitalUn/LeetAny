@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "cpp-double",
+      "language": "cpp",
+      "parameters": [
+        "n"
+      ],
+      "title": "Double an integer",
+      "statement": "Return twice n. Inputs are integers between -1000 and 1000.",
+      "entry": "double_value",
+      "starter": "long long double_value(long long n) { return 0; }",
+      "difficulty": "easy",
+      "editorial": {
+        "explanation": "Multiply the input by two.",
+        "code": "long long double_value(long long n) { return 2 * n; }"
+      },
+      "harness": "#include <iostream>\n#include \"solution.cpp\"\nint main() {\n    long long n;\n    if (!(std::cin >> n)) return 1;\n    std::cout << \"{\\\"value\\\":\" << double_value(n) << \"}\";\n}\n",
+      "tests": [
+        {
+          "args": [
+            3
+          ],
+          "expected": 6
+        },
+        {
+          "args": [
+            0
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            -4
+          ],
+          "expected": -8
+        }
+      ]
+    }
+  ]
+}

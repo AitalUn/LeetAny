@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "exercises": [
+    {
+      "id": "rust-double",
+      "language": "rust",
+      "parameters": [
+        "n"
+      ],
+      "title": "Double an integer",
+      "statement": "Return twice n. Inputs are integers between -1000 and 1000.",
+      "entry": "double_value",
+      "starter": "fn double_value(n: i64) -> i64 { todo!() }",
+      "difficulty": "easy",
+      "editorial": {
+        "explanation": "Multiply the input by two.",
+        "code": "fn double_value(n: i64) -> i64 { 2 * n }"
+      },
+      "harness": "include!(\"solution.rs\");\nuse std::io::{self, BufRead};\nfn main() {\n    let line = io::stdin().lock().lines().next().unwrap().unwrap();\n    let n: i64 = line.parse().unwrap();\n    println!(\"{{\\\"value\\\":{}}}\", double_value(n));\n}\n",
+      "tests": [
+        {
+          "args": [
+            3
+          ],
+          "expected": 6
+        },
+        {
+          "args": [
+            0
+          ],
+          "expected": 0
+        },
+        {
+          "args": [
+            -4
+          ],
+          "expected": -8
+        }
+      ]
+    }
+  ]
+}

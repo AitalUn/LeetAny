@@ -5,7 +5,7 @@ const {buildSync} = require('esbuild');
 
 const root = path.resolve(__dirname, '..');
 // Use the editor packages provided by Obsidian and ship the Python grammar locally.
-const licenses = ['@codemirror/lang-python', '@lezer/python'].map(pkg =>
+const licenses = ['python','cpp','rust','go'].flatMap(id=>['@codemirror/lang-'+id,'@lezer/'+id]).map(pkg =>
   pkg + '\n' + fs.readFileSync(path.join(root, 'node_modules', pkg, 'LICENSE'), 'utf8'));
 buildSync({
   absWorkingDir: root,
@@ -13,7 +13,10 @@ buildSync({
   outfile: 'plugins/leetany/main.js',
   bundle: true,
   loader: {'.py': 'text', '.md': 'text'},
-  define: {LEETANY_SAMPLE_COURSE: JSON.stringify(Object.fromEntries(
+  define: {LEETANY_NATIVE_EXAMPLES: JSON.stringify(Object.fromEntries(
+    fs.readdirSync(path.join(root,'.agents/skills/leetany-course/examples')).sort()
+      .map(name=>[name,fs.readFileSync(path.join(root,'.agents/skills/leetany-course/examples',name),'utf8')])
+  )), LEETANY_SAMPLE_COURSE: JSON.stringify(Object.fromEntries(
     fs.readdirSync(path.join(root, 'Courses/LLM')).sort()
       .filter(name => name.endsWith('.md') || name.endsWith('.leetany'))
       .map(name => [name, fs.readFileSync(path.join(root, 'Courses/LLM', name), 'utf8')])

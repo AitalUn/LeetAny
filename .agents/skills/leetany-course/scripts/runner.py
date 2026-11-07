@@ -39,13 +39,13 @@ def run(vault, note, catalog='Обучение/LLM/Практикум/catalog.js
     code = extract_solution(note_path.read_text())
     return execute(code, exercise, timeout)
 
-def execute(code, exercise, timeout):
+def execute(code, exercise, timeout, python=None, env=None):
     fingerprint = hashlib.sha256(code.encode()).hexdigest()
     with tempfile.TemporaryDirectory(prefix='leetany-') as directory:
         temp = Path(directory)
         (temp/'request.json').write_text(json.dumps({'code':code, 'entry':exercise['entry'], 'tests':exercise['tests']}, ensure_ascii=False))
         with (temp/'stdout.txt').open('w') as stdout, (temp/'stderr.txt').open('w') as stderr:
-            process = subprocess.Popen([sys.executable, '-I', '-B', str(Path(__file__).with_name('worker.py')), str(temp/'request.json'), str(temp/'result.json')], cwd=temp, stdout=stdout, stderr=stderr, start_new_session=os.name!='nt')
+            process = subprocess.Popen([python or sys.executable, '-I', '-B', str(Path(__file__).with_name('worker.py')), str(temp/'request.json'), str(temp/'result.json')], cwd=temp, env=env, stdout=stdout, stderr=stderr, start_new_session=os.name!='nt')
             try:
                 process.wait(timeout=timeout)
             except subprocess.TimeoutExpired:

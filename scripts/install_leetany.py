@@ -68,11 +68,19 @@ def install(vault,enable=False):
         if (destination == target/'SKILL.md' or not destination.exists()
                 or hashlib.sha256(destination.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
                 in {'938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84',
-                    '15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f'}):
+                    '15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f',
+                    '1a9604d4929a06517d5ce92265239d40a241695a3538729ccd92250164176a75'}):
             shutil.copy2(skill,destination)
         elif destination.read_bytes()!=skill.read_bytes():
             print(f'Keeping customized skill: {destination}')
 
+    for root in ('.agents', '.claude'):
+        for subdir in ('scripts', 'examples'):
+            dest=vault/root/'skills/leetany-course'/subdir
+            dest.mkdir(parents=True, exist_ok=True)
+            for src in (skill.parent/subdir).iterdir():
+                if src.is_file() and not (dest/src.name).exists():
+                    shutil.copy2(src, dest/src.name)
     settings=target/'data.json'
     values=json.loads(settings.read_text()) if settings.exists() else {}
     values.setdefault('pythonPath',sys.executable)
@@ -94,7 +102,7 @@ def install(vault,enable=False):
                     instructions.write_bytes(remaining)
                 else:
                     instructions.unlink()
-    hint=(target/'agent-hint.md').read_bytes()
+    hint=(SOURCE/'agent-hint.md').read_bytes()
     marker=hint.splitlines()[0]
     for filename in ('AGENTS.md','CLAUDE.md'):
         file=vault/filename

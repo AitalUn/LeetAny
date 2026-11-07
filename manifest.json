@@ -1,9 +1,9 @@
 {
   "id": "leetany",
   "name": "LeetAny",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "minAppVersion": "1.15.0",
-  "description": "Solve Python coding exercises alongside your course notes and check your answers with local tests.",
+  "description": "Solve Python, C++, Rust, and Go exercises alongside your course notes and check your answers with local tests.",
   "author": "AitalUn",
   "isDesktopOnly": true
 }

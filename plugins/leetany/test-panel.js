@@ -42,7 +42,8 @@ function field(parent, label, value, tone) {
 class TestPanel {
   constructor(parent, task) {
     this.task = task;
-    this.names = positionalNames(task);
+    this.names = task.parameters ?? (task.language && task.language !== 'python' ? [] : positionalNames(task));
+    this.format = task.language && task.language !== 'python' ? v=>JSON.stringify(v) : valueText;
     this.active = 'tests';
     this.index = 0;
     this.message = 'Run your code to see the results.';
@@ -106,7 +107,7 @@ class TestPanel {
         return;
       }
       const success = report.verdict === 'PASSED';
-      const title = {PASSED:'Accepted', FAILED:'Tests failed', TIMEOUT:'Time Limit Exceeded', ERROR:'Execution Error'}[report.verdict] || report.verdict;
+      const title = {PASSED:'Accepted', FAILED:'Tests failed', TIMEOUT:'Time Limit Exceeded', ERROR:'Execution Error', COMPILE_ERROR:'Compilation Error'}[report.verdict] || report.verdict;
       this.summary.createEl('strong',{cls: success ? 'leetany-pass' : 'leetany-fail',text:title});
       if (hasCases) this.summary.createSpan({text:report.passed+' of '+report.total+' passed'});
       if (report.message) field(this.detail,'Message',report.message);
@@ -122,7 +123,7 @@ class TestPanel {
     });
     const test = this.task.tests[this.index];
     const actual = report?.cases?.[this.index];
-    const expected = Object.hasOwn(test,'error') ? test.error : valueText(test.expected);
+    const expected = Object.hasOwn(test,'error') ? test.error : this.format(test.expected);
     if (actual) {
       const returned = actual.error ? [actual.error,actual.message].filter(Boolean).join(': ') : actual.actual;
       const comparison = this.detail.createDiv({cls:'leetany-comparison'});
@@ -131,7 +132,7 @@ class TestPanel {
       if (actual.mutation) field(this.detail,'Error',actual.mutation,'leetany-fail');
     }
     if (!test.args.length) field(this.detail,'Arguments','()');
-    test.args.forEach((arg,i) => field(this.detail,(this.names[i] || 'Argument '+(i+1))+' =',valueText(arg)));
+    test.args.forEach((arg,i) => field(this.detail,(this.names[i] || 'Argument '+(i+1))+' =',this.format(arg)));
     if (!actual) field(this.detail,'Expected',expected);
     if (report?.stdout) field(this.detail,'Program output',report.stdout);
   }
