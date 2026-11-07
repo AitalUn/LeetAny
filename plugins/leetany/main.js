@@ -137,6 +137,14 @@ module.exports = class LeetAny extends Plugin {
           if(!await adapter.exists(file)) await adapter.write(file,skill);
           else if(await adapter.read(file)!==skill) kept.push(file);
         }
+        const hint=await adapter.read(this.manifest.dir+'/agent-hint.md');
+        const marker=hint.split(/\r?\n/)[0];
+        for(const filename of ['AGENTS.md','CLAUDE.md']) {
+          const file=this.app.vault.getAbstractFileByPath(filename);
+          if(file) await this.app.vault.process(file,text=>
+            text.split(/\r?\n/).includes(marker)?text:text+(text?'\n\n':'')+hint);
+          else await this.app.vault.create(filename,hint);
+        }
         new Notice(kept.length?'Сохранены локальные версии: '+kept.join(', '):'Skill leetany-course установлен');
       } catch(error) {new Notice(error.message);}
     }});

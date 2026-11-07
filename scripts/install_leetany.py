@@ -7,7 +7,7 @@ import shutil
 import sys
 
 SOURCE=Path(__file__).resolve().parents[1]/'plugins/leetany'
-FILES=['manifest.json','main.js','core.js','styles.css','runner.py','worker.py']
+FILES=['manifest.json','main.js','core.js','styles.css','runner.py','worker.py','agent-hint.md']
 
 def install(vault,enable=False):
     vault=Path(vault).resolve()
@@ -51,6 +51,14 @@ def install(vault,enable=False):
                     instructions.write_bytes(remaining)
                 else:
                     instructions.unlink()
+    hint=(target/'agent-hint.md').read_bytes()
+    marker=hint.splitlines()[0]
+    for filename in ('AGENTS.md','CLAUDE.md'):
+        file=vault/filename
+        existing=file.read_bytes() if file.exists() else b''
+        if marker not in existing.splitlines():
+            with file.open('ab') as stream:
+                stream.write((b'\n\n' if existing else b'')+hint)
     if enable:
         config=vault/'.obsidian/community-plugins.json'
         enabled=json.loads(config.read_text()) if config.exists() else []
