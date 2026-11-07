@@ -1,6 +1,7 @@
 'use strict';
 const {Plugin, TextFileView, PluginSettingTab, Setting, Notice} = require('obsidian');
 const path = require('node:path');
+const {createPythonEditor} = require('./editor');
 const {parseExerciseFile, runTests, fingerprint, isComplete} = require('./core');
 
 class PracticeView extends TextFileView {
@@ -9,15 +10,18 @@ class PracticeView extends TextFileView {
   getDisplayText() { return this.file?.basename || 'LeetAny'; }
   getIcon() { return 'code-2'; }
   getViewData() { return this.raw ?? ''; }
-  clear() { this.raw = ''; this.course = null; this.contentEl.empty(); }
+  disposeEditor() { this.editor?.destroy(); this.editor = null; }
+  async onClose() { this.disposeEditor(); await super.onClose(); }
+  clear() { this.disposeEditor(); this.raw = ''; this.course = null; this.contentEl.empty(); }
   setViewData(raw, clear) {
     this.raw = raw;
     if (clear) this.index = 0;
     try { this.course = parseExerciseFile(raw); this.draw(); }
-    catch (err) { this.course = null; this.contentEl.empty(); this.contentEl.createEl('p',{text:'Invalid .leetany file: '+err.message}); }
+    catch (err) { this.disposeEditor(); this.course = null; this.contentEl.empty(); this.contentEl.createEl('p',{text:'Invalid .leetany file: '+err.message}); }
   }
   draw() {
     const root = this.contentEl;
+    this.disposeEditor();
     root.empty(); root.addClass('leetany-view');
     const courses = this.course.exercises;
     this.index = Math.min(this.index, courses.length-1);
@@ -31,30 +35,35 @@ class PracticeView extends TextFileView {
       select.onchange=()=>{this.index=Number(select.value);this.draw();};
     }
     left.createEl('h2',{text:task.title});
-    left.createEl('p',{text:task.statement});
-    if(task.example) left.createEl('pre',{text:task.example});
-    const cases=left.createEl('details');
+    left.createEl('p',{cls:'leetany-statement',text:task.statement});
+    if(task.example) {
+      left.createEl('h3',{text:'Пример'});
+      left.createEl('pre',{cls:'leetany-example',text:task.example});
+    }
+    const cases=left.createEl('details',{cls:'leetany-cases'});
     cases.createEl('summary',{text:'Тесты ('+task.tests.length+')'});
-    cases.createEl('pre',{text:JSON.stringify(task.tests,null,2)});
+    const list=cases.createEl('ol');
+    for(const test of task.tests) {
+      const row=list.createEl('li');
+      row.createEl('code',{text:'Аргументы: '+JSON.stringify(test.args)});
+      row.createEl('div',{cls:'leetany-expected',text:Object.hasOwn(test,'error')
+        ? 'Исключение: '+test.error : 'Ожидается: '+JSON.stringify(test.expected)});
+    }
     const right=grid.createDiv({cls:'leetany-work'});
-    right.createEl('strong',{text:'Python'});
-    const editor=right.createEl('textarea',{attr:{'aria-label':'Python-код',spellcheck:'false'}});
-    editor.value=task.solution ?? task.starter;
-    const run=right.createEl('button',{text:'Запустить тесты',cls:'mod-cta'});
-    const output=right.createEl('pre',{attr:{'aria-live':'polite'}});
-    editor.oninput=()=>{
-      task.solution=editor.value;
+    const bar=right.createDiv({cls:'leetany-toolbar'});
+    bar.createEl('h3',{text:'Python'});
+    const run=bar.createEl('button',{text:'Запустить тесты',cls:'mod-cta'});
+    const surface=right.createDiv({cls:'leetany-editor'});
+    const output=right.createEl('pre',{cls:'leetany-result',attr:{'aria-live':'polite'}});
+    const editor=createPythonEditor(surface,task.solution ?? task.starter,code=>{
+      task.solution=code;
       this.raw=JSON.stringify(this.course,null,2)+'\n';
       this.requestSave();
       output.textContent='';
-    };
-    editor.onkeydown=event=>{
-      if (event.key==='Tab' && !event.shiftKey) {
-        event.preventDefault();editor.setRangeText('    ',editor.selectionStart,editor.selectionEnd,'end');editor.oninput();
-      }
-    };
+    });
+    this.editor=editor;
     run.onclick=async()=>{
-      const code=editor.value;
+      const code=editor.state.doc.toString();
       const signature=fingerprint(task);
       run.disabled=true;output.textContent='Проверяю…';
       try {
@@ -67,7 +76,7 @@ class PracticeView extends TextFileView {
           this.raw=JSON.stringify(this.course,null,2)+'\n';
           await this.save();
         }
-        output.textContent=editor.value===code ? [report.verdict+' '+report.passed+'/'+report.total,report.message,
+        output.textContent=editor.state.doc.toString()===code ? [report.verdict+' '+report.passed+'/'+report.total,report.message,
           ...(report.cases||[]).map(c=>c.passed?'✓ '+c.case:'✗ '+JSON.stringify(c))].filter(Boolean).join('\n') : 'Код изменён. Запусти тесты снова.';
       } catch(err) {output.textContent=err.message;} finally {run.disabled=false;}
     };

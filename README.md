@@ -1,6 +1,6 @@
 # LeetAny
 
-LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, each exercise has its own ✅ when its current code passes its tests, or ❌ until then.
+LeetAny opens coding exercises directly in Obsidian Desktop. Click a `.leetany` file to read the problem on the left, edit syntax-highlighted Python on the right and run the public tests. Solutions are saved inside the exercise file and travel with the course. In the file explorer, each exercise has its own ✅ when its current code passes its tests, or ❌ until then.
 
 ## Install
 
@@ -32,4 +32,4 @@ Open the vault as a project in Codex or Claude Code and ask for a LeetAny course
 
 ## Develop
 
-Edit plugins/leetany/main.src.js or core.js, run `node scripts/build_leetany.cjs`, and reinstall. Run `node --test tests/leetany.test.cjs` and `python3 -m unittest discover -s tests`. MIT license.
+Install build dependencies with `npm ci`, edit the plugin sources, run `npm run build`, and reinstall. Run `node --test tests/leetany.test.cjs` and `python3 -m unittest discover -s tests`. MIT license.
