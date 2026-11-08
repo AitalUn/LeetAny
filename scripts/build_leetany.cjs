@@ -12,7 +12,7 @@ buildSync({
   entryPoints: ['plugins/leetany/main.src.js'],
   outfile: 'plugins/leetany/main.js',
   bundle: true,
-  loader: {'.py': 'text', '.md': 'text'},
+  loader: {'.py': 'text', '.md': 'text', '.css': 'text'},
   define: {LEETANY_NATIVE_EXAMPLES: JSON.stringify(Object.fromEntries(
     fs.readdirSync(path.join(root,'.agents/skills/leetany-course/examples')).sort()
       .map(name=>[name,fs.readFileSync(path.join(root,'.agents/skills/leetany-course/examples',name),'utf8')])

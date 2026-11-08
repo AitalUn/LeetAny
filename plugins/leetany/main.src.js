@@ -8,6 +8,7 @@ const {addColumnSplitter} = require('./splitter');
 const {showDescription} = require('./description');
 const {TestPanel} = require('./test-panel');
 const {createCodeEditor} = require('./editor');
+const bundledStyles = require('./styles.css');
 const {languageNames, parseExerciseFile, fingerprint, isComplete} = require('./core');
 
 class PracticeView extends TextFileView {
@@ -78,7 +79,20 @@ class PracticeView extends TextFileView {
   }
 }
 module.exports = class LeetAny extends Plugin {
+  async useBundledStylesIfMissing() {
+    const {adapter} = this.app.vault;
+    const file = this.manifest.dir + '/styles.css';
+    if (await adapter.exists(file) && (await adapter.read(file)).trim()) return;
+
+    // Obsidian can finish installing a plugin even when its optional CSS download fails.
+    const doc = this.app.workspace.containerEl.ownerDocument;
+    const style = doc.createElement('style');
+    style.textContent = bundledStyles;
+    doc.head.appendChild(style);
+    this.register(() => style.remove());
+  }
   async onload(){
+    await this.useBundledStylesIfMissing();
     this.settings={pythonPath:'python3',...await this.loadData()};
     this.registerView('leetany-practice',leaf=>new PracticeView(leaf,this));
     this.registerExtensions(['leetany'],'leetany-practice');
