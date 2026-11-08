@@ -69,7 +69,8 @@ def install(vault,enable=False):
                 or hashlib.sha256(destination.read_bytes().replace(b'\r\n', b'\n')).hexdigest()
                 in {'938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84',
                     '15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f',
-                    '1a9604d4929a06517d5ce92265239d40a241695a3538729ccd92250164176a75'}):
+                    '1a9604d4929a06517d5ce92265239d40a241695a3538729ccd92250164176a75',
+                    'b56ef44937490907f74835097ad00822a12013783df63f6b36cdfc7da50c2005'}):
             shutil.copy2(skill,destination)
         elif destination.read_bytes()!=skill.read_bytes():
             print(f'Keeping customized skill: {destination}')

@@ -112,7 +112,7 @@ module.exports = class LeetAny extends Plugin {
             const existing=await adapter.read(file);
             if(existing===skill) continue;
             const hash=require('node:crypto').createHash('sha256').update(existing.replace(/\r\n/g,'\n')).digest('hex');
-            if(['938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84','15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f','1a9604d4929a06517d5ce92265239d40a241695a3538729ccd92250164176a75'].includes(hash)) await adapter.write(file,skill);
+            if(['938a1a1f6cf9b2fa20ee5559d6722ecfe47c9c0b138fca0dff70702bf2fb4f84','15acb72848dfb6d5b20d951c2a17829450073cd5e77767e7a8e6967e7895732f','1a9604d4929a06517d5ce92265239d40a241695a3538729ccd92250164176a75','b56ef44937490907f74835097ad00822a12013783df63f6b36cdfc7da50c2005'].includes(hash)) await adapter.write(file,skill);
             else kept.push(file);
           }
         }

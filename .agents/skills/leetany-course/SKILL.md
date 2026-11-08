@@ -4,7 +4,15 @@ description: Create LeetAny courses and exercises in Python, C++, Rust or Go. Co
 ---
 ## Authoring a LeetAny course
 
-Create one course folder with numbered Markdown lessons and one UTF-8 JSON file per exercise, next to its lesson (e.g. `01 Context.md` and `01a Token budget.leetany`). Each file contains exactly one item in `exercises`. Add a wikilink from the lesson to the exercise. Obsidian opens this extension in LeetAny. Keep plugin controls in English. Write titles, statements, examples, lessons and editorial explanations in the repository’s content language. Infer it from project instructions and neighboring lessons; follow an explicitly requested course language. Use idiomatic identifiers in the requested language. Teach the concept in a lesson, then ask the student to implement a small, fully specified function. Include runnable examples in lessons when helpful. Leave the exercise starter unfinished.
+LeetAny adds coding practice to learning material. When extending an existing course, preserve its structure, depth, examples and language. Add links where the practice belongs. When writing a new course, choose the scope from the learner’s goals and prerequisites. Develop each idea far enough for the reader to follow the reasoning, work through an example and understand how it connects to the next chapter. Read the lessons without their exercise links: the course should still teach what it promises.
+
+A chapter may have several exercises, one exercise, or none. For each exercise, give the learner a focused, fully specified task and an unfinished starter. By default, use numbered Markdown lessons and a sibling UTF-8 JSON file for each exercise (e.g. `01 Context.md` and `01a Token budget.leetany`). Follow the vault’s placement rules if it uses a separate practice folder. Each file contains exactly one item in `exercises`. Add a wikilink from the lesson to that file.
+
+Keep plugin controls in English. Write titles, statements, examples, lessons and editorial explanations in the content language of the course. Infer it from project instructions and existing lessons unless the user specifies it.
+
+## Runnable exercises
+
+The same JSON schema describes exercises across supported languages. Choose the programming language for the skill being practised. Set `language` explicitly on new exercises. Existing exercises without it use Python. For an unsupported runtime, teach the topic in Markdown with examples in the requested language and explain the execution limit before offering a different runtime. See the environment section below when adding runnable exercises.
 
 A working file has this structure:
 
@@ -13,6 +21,7 @@ A working file has this structure:
   "version": 1,
   "exercises": [{
     "id": "sum-01",
+    "language": "python",
     "title": "Sum a list",
     "statement": "Return the sum of a list of integers. An empty list has sum zero. Do not mutate the input.",
     "example": "total([2, 3]) returns 5",
@@ -37,7 +46,7 @@ Before finishing, parse each exercise file as JSON and validate it with the Leet
 
 ## Prepare and verify the course environment
 
-Treat a request to create a course as including environment setup. Select the requested language and check that the interpreter/compiler works on this device. The plugin uses Python 3.10+ as its local test coordinator for all four languages. From this skill directory run `python3 scripts/course_runner.py setup "/path/to/course"`, then run `python3 scripts/course_runner.py check "/path/to/course/task.leetany" --reference` for every task. Also run the starter without `--reference` and confirm it fails the intended checks. Fix setup/test failures before handing off. Do not put the reference code in the learner's solution field.
+For a course with runnable exercises, prepare the environment for those exercises. Select the requested language and check that the interpreter/compiler works on this device. The plugin uses Python 3.10+ as its local test coordinator for all four languages. From this skill directory run `python3 scripts/course_runner.py setup "/path/to/course"`, then run `python3 scripts/course_runner.py check "/path/to/course/task.leetany" --reference` for every task. Also run the starter without `--reference` and confirm it fails the intended checks. Fix setup/test failures before handing off. Do not put the reference code in the learner's solution field.
 
 Use `leetany.course.json` beside the exercises. Keys are `python`, `cpp`, `rust` and `go`. An exercise chooses its own `language` from these keys; omitted means Python. Example:
 
