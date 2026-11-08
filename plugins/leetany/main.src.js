@@ -44,7 +44,7 @@ class PracticeView extends TextFileView {
     const right=grid.createDiv({cls:'leetany-work'});
     const codePanel=right.createDiv({cls:'leetany-panel leetany-code-panel'});
     const bar=codePanel.createDiv({cls:'leetany-panel-bar'});
-    setIcon(bar.createSpan(),'code-xml');
+    setIcon(bar.createSpan({cls:'leetany-icon'}),'code-xml');
     bar.createSpan({text:'Code'});
     bar.createSpan({text:languageNames[language],cls:'leetany-language'});
     const run=bar.createEl('button',{text:'Run tests',cls:'leetany-run'});
@@ -64,7 +64,7 @@ class PracticeView extends TextFileView {
       try {
         const directory=path.dirname(this.app.vault.adapter.getFullPath(this.file.path));
         await this.save();
-        const report=await runBundledTests(this.plugin.settings.pythonPath,directory,task,code);
+        const report=await runBundledTests(this.plugin, directory, task, code);
         if(this.course?.exercises.includes(task) && fingerprint(task)===signature) {
           if(report.verdict==='PASSED') task.passedHash=signature;
           else delete task.passedHash;

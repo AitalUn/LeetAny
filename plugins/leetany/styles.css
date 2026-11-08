@@ -15,8 +15,8 @@
   padding: 0 .5rem; border-bottom: 1px solid var(--background-modifier-border); color: var(--text-normal);
   font-size: var(--font-ui-small); font-weight: 600;
 }
-.leetany-panel-bar span:has(> svg) { display: inline-flex; color: var(--color-green); }
-.leetany-description .leetany-panel-bar span:has(> svg) { color: var(--color-blue); }
+.leetany-panel-bar .leetany-icon { display: inline-flex; color: var(--color-green); }
+.leetany-description .leetany-panel-bar .leetany-icon { color: var(--color-blue); }
 .leetany-panel-bar svg { width: 1rem; height: 1rem; }
 .leetany-problem, .leetany-test-body { overflow: auto; padding: clamp(.65rem, 1.4cqw, 1rem); }
 .leetany-problem h2 { margin: 0 0 1rem; font-size: 1.45em; line-height: 1.25; }

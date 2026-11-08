@@ -52,7 +52,7 @@ class TestPanel {
     this.tabs = {};
     for (const [id, title, icon] of [['tests','Testcase','list-checks'], ['results','Test Result','terminal']]) {
       const button = tabs.createEl('button',{cls:'leetany-tab'});
-      setIcon(button.createSpan(),icon);
+      setIcon(button.createSpan({cls:'leetany-icon'}),icon);
       button.createSpan({text:title});
       button.onclick = () => { this.active = id; this.render(); };
       this.tabs[id] = button;

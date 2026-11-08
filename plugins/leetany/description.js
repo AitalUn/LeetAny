@@ -11,7 +11,7 @@ function showDescription(panel, view, task, tasks) {
   const tabs = [];
   function addTab(label, icon, page) {
     const button = bar.createEl('button',{cls:'leetany-tab'});
-    setIcon(button.createSpan(),icon);
+    setIcon(button.createSpan({cls:'leetany-icon'}),icon);
     button.createSpan({text:label});
     tabs.push({button,page});
     button.onclick = () => {
