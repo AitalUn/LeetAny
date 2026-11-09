@@ -2548,7 +2548,11 @@ var require_progress = __commonJS({
       if (!value || typeof value.folder !== "string" || !value.folder.trim() || !Array.isArray(value.axes) || !value.axes.length || value.axes.some((x) => typeof x !== "string" || !x.trim())) {
         throw Error("Set a course folder and a list of skill axes.");
       }
-      return { ...value, folder: value.folder.replace(/\/+$/, ""), axes: [...new Set(value.axes)] };
+      const courseAxes = value.courseAxes ?? {};
+      if (typeof courseAxes !== "object" || Array.isArray(courseAxes) || Object.values(courseAxes).some((names) => !Array.isArray(names) || names.some((n) => typeof n !== "string" || !n.trim()))) {
+        throw Error("courseAxes must map course folder names to lists of skills.");
+      }
+      return { ...value, courseAxes, folder: value.folder.replace(/\/+$/, ""), axes: [...new Set(value.axes)] };
     }
     function link(parent, app, path2, label, origin) {
       const anchor = parent.createEl("a", { text: label, cls: "internal-link", href: path2 });
@@ -2567,14 +2571,18 @@ var require_progress = __commonJS({
       function polygon(fraction, cls) {
         svg.createSvg("polygon", { cls, attr: { points: axes.map((a, i) => point(i, fraction(a)).join(",")).join(" ") } });
       }
-      for (const scale of [0.25, 0.5, 0.75, 1]) polygon(() => scale, "leetany-radar-guide");
-      polygon((axis) => axis.total ? axis.done / axis.total : 0, "leetany-radar-area");
+      for (const scale of [0.25, 0.5, 0.75, 1]) {
+        if (axes.length >= 3) polygon(() => scale, "leetany-radar-guide");
+        else svg.createSvg("circle", { cls: "leetany-radar-guide", attr: { cx: 160, cy: 160, r: 122 * scale } });
+      }
+      if (axes.length >= 3) polygon((axis) => axis.total ? axis.done / axis.total : 0, "leetany-radar-area");
       axes.forEach((axis, i) => {
         const [x, y] = point(i, 1);
         svg.createSvg("line", { cls: "leetany-radar-guide", attr: { x1: 160, y1: 160, x2: x, y2: y } });
         const [lx, ly] = point(i, 1.13);
         svg.createSvg("text", { attr: { x: lx, y: ly, "text-anchor": "middle", "dominant-baseline": "central" } }).textContent = String(i + 1);
         const [cx, cy] = point(i, axis.total ? axis.done / axis.total : 1);
+        if (axes.length < 3 && axis.done) svg.createSvg("line", { cls: "leetany-radar-spoke", attr: { x1: 160, y1: 160, x2: cx, y2: cy } });
         svg.createSvg("circle", { cls: axis.total ? "leetany-radar-point" : "leetany-radar-missing", attr: { cx, cy, r: 3 } });
       });
     }
@@ -2582,22 +2590,25 @@ var require_progress = __commonJS({
       const section = text.split("<!-- leetany:requirements -->")[1]?.split("<!-- /leetany:requirements -->")[0] || "";
       return section.split("\n").filter((line) => line.startsWith("|")).slice(2).map((line) => {
         const cols = line.slice(1, -1).split("|").map((x) => x.trim());
-        if (cols.length !== 6) throw Error("Expected six columns in the vacancy table.");
-        const [role, source, kind, requirement, course, evidence] = cols;
+        if (cols.length !== 6 && cols.length !== 7) throw Error("Expected six or seven columns in the vacancy table.");
+        const [role, source, kind, requirement, course, evidence, labels = ""] = cols;
         if (!["\u043E\u0431\u044F\u0437\u0430\u0442\u0435\u043B\u044C\u043D\u043E", "\u0436\u0435\u043B\u0430\u0442\u0435\u043B\u044C\u043D\u043E", "\u043E\u043F\u044B\u0442", "\u043E\u043F\u044B\u0442+"].includes(kind)) throw Error("Unknown requirement type: " + kind);
-        return { role, source, kind, requirement, course, evidence };
+        return { role, source, kind, requirement, course, evidence, skills: [...new Set(labels.split(",").map((x) => x.trim()).filter((x) => x && x !== "\u2014"))] };
       });
     }
     async function snapshot(app, cfg) {
       const files = app.vault.getFiles().filter((f) => f.path.startsWith(cfg.folder + "/"));
       const tasks = /* @__PURE__ */ new Map(), chapters = /* @__PURE__ */ new Map(), errors = [];
+      const courseFor = (path2) => path2.slice(cfg.folder.length + 1).split("/").slice(0, -1)[0] || "";
+      const courses = /* @__PURE__ */ new Set();
       const notes = files.filter((f) => f.extension === "md" && f.basename.startsWith("00 ") && f.parent.path !== cfg.folder);
       const resolve = (target, origin) => app.metadataCache.getFirstLinkpathDest(target, origin);
       for (const file of notes) {
+        courses.add(courseFor(file.path));
         const text = await app.vault.cachedRead(file);
         for (const match of text.matchAll(/^\s*- \[([ xX])\]\s+\[\[([^\]|]+)(?:\|[^\]]*)?\]\]/gm)) {
           const chapter = resolve(match[2], file.path);
-          if (chapter?.extension === "md") chapters.set(chapter.path, { read: match[1] !== " ", files: [] });
+          if (chapter?.extension === "md") chapters.set(chapter.path, { course: courseFor(file.path), read: match[1] !== " ", files: [] });
         }
       }
       for (const file of files.filter((f) => f.extension === "leetany").sort((a, b) => a.path.localeCompare(b.path))) {
@@ -2607,22 +2618,19 @@ var require_progress = __commonJS({
               errors.push("Duplicate ID: " + e.id + " \xB7 " + file.path);
               continue;
             }
-            const t = { id: e.id, title: e.title, path: file.path, skills: Array.isArray(e.skills) ? e.skills : [], done: e.passedHash === fingerprint2(e) };
+            const t = { id: e.id, title: e.title, path: file.path, course: courseFor(file.path), skills: Array.isArray(e.skills) ? e.skills : [], done: e.passedHash === fingerprint2(e) };
             tasks.set(t.id, t);
+            if (t.course) courses.add(t.course);
             if (e.lesson) chapters.get(resolve(e.lesson, file.path)?.path)?.files.push(t);
           }
         } catch (error) {
           errors.push(file.path + " \xB7 " + error.message);
         }
       }
-      const axes = cfg.axes.map((name) => {
-        const tagged = [...tasks.values()].filter((t) => t.skills.includes(name));
-        return { name, total: tagged.length, done: tagged.filter((t) => t.done).length };
-      });
       const registry = cfg.vacancies && app.vault.getAbstractFileByPath(cfg.vacancies);
       if (cfg.vacancies && !registry) errors.push("Vacancy note not found: " + cfg.vacancies);
       const requirements = registry ? readRequirements(await app.vault.cachedRead(registry)) : [];
-      return { tasks, chapters, axes, requirements, errors };
+      return { tasks, chapters, courses: [...courses].sort(), requirements, errors };
     }
     function evidenceFor(row, tasks, app, origin) {
       const refs = [], ids = [];
@@ -2640,6 +2648,25 @@ var require_progress = __commonJS({
         confirmed: refs.length > 0 || examples.length > 0 && examples.every((t) => t?.done),
         links: refs.concat(examples.filter(Boolean).map((t) => ({ path: t.path, label: (t.done ? "\u2713 " : "\u25CB ") + t.title })))
       };
+    }
+    function exerciseAxes(tasks, names) {
+      return [...new Set(names)].map((name) => {
+        const tagged = tasks.filter((t) => t.skills.includes(name));
+        return { name, total: tagged.length, done: tagged.filter((t) => t.done).length };
+      });
+    }
+    function requirementAxes(rows) {
+      return [...new Set(rows.flatMap((r) => r.skills))].map((name) => {
+        const tagged = rows.filter((r) => r.skills.includes(name));
+        return { name, total: tagged.length, done: tagged.filter((r) => r.confirmed).length };
+      });
+    }
+    function drawChart(el, axes) {
+      if (!axes.length) return;
+      const layout = el.createDiv({ cls: "leetany-radar-layout" });
+      radar(layout, axes);
+      const list = layout.createEl("ol");
+      for (const a of axes) list.createEl("li", { text: a.name + " \xB7 " + (a.total ? a.done + "/" + a.total : "No data") });
     }
     var ProgressView = class extends MarkdownRenderChild {
       constructor(el, app, cfg, origin) {
@@ -2672,46 +2699,59 @@ var require_progress = __commonJS({
           const el = this.containerEl;
           el.empty();
           el.addClass("leetany-progress");
-          const tasks = [...s.tasks.values()], chapters = [...s.chapters.values()];
-          const trios = chapters.filter((c) => c.files.length === 3);
-          el.createEl("p", { text: "Read: " + chapters.filter((c) => c.read).length + "/" + chapters.length + " \xB7 Exercises passed: " + tasks.filter((t) => t.done).length + "/" + tasks.length + " \xB7 Chapters at 3/3: " + trios.filter((c) => c.files.every((t) => t.done)).length + "/" + trios.length });
-          const layout = el.createDiv({ cls: "leetany-radar-layout" });
-          radar(layout, s.axes);
-          const list = layout.createEl("ol");
-          for (const a of s.axes) list.createEl("li", { text: a.name + " \xB7 " + (a.total ? a.done + "/" + a.total : "No data") });
-          if (s.requirements.length) this.vacancies(el, s);
+          const selector = el.createEl("select", { attr: { "aria-label": "Progress view" } });
+          selector.createEl("option", { text: "All courses", value: "all" });
+          const roles = [...new Set(s.requirements.map((r) => r.role))];
+          for (const [label, prefix, names] of [["Courses", "course:", s.courses], ["Vacancies", "vacancy:", roles]]) {
+            if (!names.length) continue;
+            const group = selector.createEl("optgroup", { attr: { label } });
+            for (const name of names) group.createEl("option", { text: name, value: prefix + name });
+          }
+          selector.value = Array.from(selector.options).some((o) => o.value === this.scope) ? this.scope : "all";
+          const body = el.createDiv();
+          const show = () => {
+            this.scope = selector.value;
+            body.empty();
+            if (this.scope.startsWith("vacancy:")) this.vacancy(body, s, this.scope.slice(8));
+            else this.course(body, s, this.scope === "all" ? null : this.scope.slice(7));
+          };
+          selector.onchange = show;
+          show();
           if (s.errors.length) el.createEl("p", { text: s.errors.join("\n") });
         } catch (error) {
           if (version === this.version) this.containerEl.setText(error.message);
         }
       }
-      vacancies(el, s) {
-        const selector = el.createEl("select", { attr: { "aria-label": "Vacancy" } });
-        const roles = [...new Set(s.requirements.map((r) => r.role))];
-        for (const role of roles) selector.createEl("option", { text: role, value: role });
-        selector.value = roles.includes(this.role) ? this.role : roles[0];
-        const body = el.createDiv();
-        const show = () => {
-          this.role = selector.value;
-          body.empty();
-          const rows = s.requirements.filter((r) => r.role === this.role);
-          const url = rows[0].source.match(/\((https?:\/\/[^)]+)\)/)?.[1];
-          if (url) body.createEl("a", { text: "Vacancy posting", href: url });
-          for (const optional of [false, true]) {
-            const group = rows.filter((r) => ["\u0436\u0435\u043B\u0430\u0442\u0435\u043B\u044C\u043D\u043E", "\u043E\u043F\u044B\u0442+"].includes(r.kind) === optional).map((row) => ({ row, ...evidenceFor(row, s.tasks, this.app, this.cfg.vacancies) }));
-            body.createEl("h4", { text: (optional ? "Preferred" : "Required") + " \xB7 " + group.filter((r) => r.confirmed).length + "/" + group.length });
-            const list = body.createEl("ul");
-            for (const r of group) {
-              const li = list.createEl("li", { text: (r.confirmed ? "Confirmed" : "Unverified") + " \xB7 " + r.row.requirement });
-              for (const item of r.links) {
-                li.appendText(" \xB7 ");
-                link(li, this.app, item.path, item.label, this.origin);
-              }
+      course(body, s, name) {
+        const inCourse = (item) => !name || item.course === name;
+        const tasks = [...s.tasks.values()].filter(inCourse), chapters = [...s.chapters.values()].filter(inCourse);
+        const trios = chapters.filter((c) => c.files.length === 3);
+        body.createEl("p", { text: "Read: " + chapters.filter((c) => c.read).length + "/" + chapters.length + " \xB7 Exercises passed: " + tasks.filter((t) => t.done).length + "/" + tasks.length + " \xB7 Chapters at 3/3: " + trios.filter((c) => c.files.every((t) => t.done)).length + "/" + trios.length });
+        const names = name ? [...this.cfg.courseAxes[name] || [], ...tasks.flatMap((t) => t.skills)] : this.cfg.axes;
+        drawChart(body, exerciseAxes(tasks, names));
+        if (!names.length) body.createEl("p", { text: "No skill axes yet. Tag exercises or set courseAxes for this course." });
+      }
+      vacancy(body, s, role) {
+        const rows = s.requirements.filter((r) => r.role === role).map((row) => ({ ...row, ...evidenceFor(row, s.tasks, this.app, this.cfg.vacancies) }));
+        const axes = requirementAxes(rows);
+        if (axes.length) {
+          body.createEl("p", { text: "Confirmed requirements per skill (required and preferred)." });
+          drawChart(body, axes);
+        } else body.createEl("p", { text: "Add skill names to the seventh column of the vacancy table to chart this role." });
+        const url = rows[0].source.match(/\((https?:\/\/[^)]+)\)/)?.[1];
+        if (url) body.createEl("a", { text: "Vacancy posting", href: url });
+        for (const optional of [false, true]) {
+          const group = rows.filter((r) => ["\u0436\u0435\u043B\u0430\u0442\u0435\u043B\u044C\u043D\u043E", "\u043E\u043F\u044B\u0442+"].includes(r.kind) === optional);
+          body.createEl("h4", { text: (optional ? "Preferred" : "Required") + " \xB7 " + group.filter((r) => r.confirmed).length + "/" + group.length });
+          const list = body.createEl("ul");
+          for (const r of group) {
+            const li = list.createEl("li", { text: (r.confirmed ? "Confirmed" : "Unverified") + " \xB7 " + r.requirement });
+            for (const item of r.links) {
+              li.appendText(" \xB7 ");
+              link(li, this.app, item.path, item.label, this.origin);
             }
           }
-        };
-        selector.onchange = show;
-        show();
+        }
       }
     };
     function registerProgress2(plugin) {
@@ -2730,7 +2770,7 @@ var require_progress = __commonJS({
 // plugins/leetany/styles.css
 var require_styles = __commonJS({
   "plugins/leetany/styles.css"(exports2, module2) {
-    module2.exports = '.workspace-leaf-content[data-type="leetany-practice"] > .view-content.leetany-view {\n  height: 100%; min-height: 0; padding: 0; overflow: auto; container-type: inline-size;\n  --leetany-code-size: var(--font-ui-small, 13px);\n  --leetany-field: var(--background-modifier-hover);\n}\n.leetany-grid {\n  display: grid; grid-template-columns: var(--leetany-description-width, 50%) 1px minmax(0, 1fr);\n  height: 100%; min-height: 0; background: var(--background-primary);\n}\n.leetany-panel {\n  display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;\n}\n.leetany-panel-bar {\n  display: flex; align-items: center; flex: none; min-height: 2rem; gap: .5rem;\n  padding: 0 .5rem; border-bottom: 1px solid var(--background-modifier-border); color: var(--text-normal);\n  font-size: var(--font-ui-small); font-weight: 600;\n}\n.leetany-panel-bar .leetany-icon { display: inline-flex; color: var(--color-green); }\n.leetany-description .leetany-panel-bar .leetany-icon { color: var(--color-blue); }\n.leetany-panel-bar svg { width: 1rem; height: 1rem; }\n.leetany-problem, .leetany-test-body { overflow: auto; padding: clamp(.65rem, 1.4cqw, 1rem); }\n.leetany-problem h2 { margin: 0 0 1rem; font-size: 1.45em; line-height: 1.25; }\n.leetany-problem select { max-width: 100%; margin-bottom: 1rem; }\n.leetany-statement { line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }\n.leetany-problem h3 { margin: 1.6rem 0 .6rem; font-size: var(--font-ui-medium); }\n.leetany-example, .leetany-field pre {\n  white-space: pre-wrap; overflow-wrap: anywhere; margin: 0;\n  font: var(--font-ui-small)/1.55 var(--font-monospace);\n}\n.leetany-view .leetany-example {\n  padding: .5rem .85rem; border-left: 3px solid var(--background-modifier-border);\n  background: transparent;\n}\n.leetany-work {\n  min-width: 0; min-height: 0; display: grid;\n  grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);\n\n}\n.leetany-splitter {\n  position: relative; z-index: 1; justify-self: center; width: 11px;\n  touch-action: none; cursor: col-resize;\n}\n.leetany-splitter::before {\n  content: ""; position: absolute; inset-block: 0; left: 50%;\n  width: 1px; transform: translateX(-50%); background: var(--background-modifier-border);\n}\n.leetany-splitter:is(:hover, :focus-visible)::before, .leetany-resizing .leetany-splitter::before {\n  width: 3px; background: var(--interactive-accent);\n}\n.leetany-resizing { user-select: none; }\n.leetany-tests { border-top: 1px solid var(--background-modifier-border); }\n.leetany-language { font-weight: normal; color: var(--text-muted); }\n.leetany-view button.leetany-run {\n  margin-left: auto; padding: 0 .7rem; box-shadow: none;\n  color: var(--color-green); background: var(--background-modifier-hover);\n}\n.leetany-editor { display: flex; flex: 1; min-height: 0; overflow: hidden; }\n.leetany-view button.leetany-tab, .leetany-view button.leetany-case {\n  border: none; box-shadow: none; background: transparent; color: var(--text-muted);\n}\n.leetany-view button.leetany-tab { display: inline-flex; gap: .4rem; padding: 0 .35rem; }\n.leetany-view button.leetany-tab[aria-pressed="true"] { color: var(--text-normal); font-weight: 600; }\n.leetany-case-list { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .85rem; }\n.leetany-view button.leetany-case { padding: 0 .75rem; }\n.leetany-view button.leetany-case[aria-pressed="true"], .leetany-view button.leetany-case:hover {\n  color: var(--text-normal); background: var(--leetany-field);\n}\n.leetany-view .leetany-pass, .leetany-view button[data-outcome="pass"] { color: var(--color-green); }\n.leetany-view .leetany-fail, .leetany-view button[data-outcome="fail"] { color: var(--color-red); }\n.leetany-summary { display: flex; align-items: baseline; gap: .65rem; margin-bottom: .85rem; }\n.leetany-summary strong { font-size: var(--font-ui-large); }\n.leetany-summary span, .leetany-empty, .leetany-field-label { color: var(--text-muted); font-size: var(--font-ui-small); }\n.leetany-empty { padding: .75rem 0; }\n.leetany-comparison {\n  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));\n  gap: .65rem; margin-bottom: .85rem;\n}\n.leetany-tests .leetany-comparison .leetany-field { margin: 0; min-width: 0; }\n.leetany-field + .leetany-field { margin-top: .7rem; }\n.leetany-field-label { margin-bottom: .35rem; }\n.leetany-field pre { padding: .55rem .75rem; border-radius: var(--radius-s); background: var(--leetany-field); }\n.leetany-tests [hidden] { display: none; }\n.leetany-editor .cm-editor { width: 100%; height: 100%; min-width: 0; background: var(--background-primary); }\n.leetany-editor .cm-editor.cm-focused { outline: none; }\n.leetany-editor .cm-scroller { overflow: auto; font: var(--leetany-code-size)/1.5 var(--font-monospace); }\n.leetany-editor .cm-content, .leetany-editor .cm-gutters, .leetany-reference code { font-size: inherit; }\n.leetany-editor .cm-gutters { color: var(--text-faint); border: none; background: transparent; }\n.leetany-editor .cm-content { padding-block: .45rem; }\n.leetany-editor .cm-line { padding-inline: .65rem; }\n.leetany-editor .cm-content { caret-color: var(--text-normal); }\n.leetany-keyword { color: var(--code-keyword, var(--color-purple)); }\n.leetany-function { color: var(--code-function, var(--color-blue)); }\n.leetany-string { color: var(--code-string, var(--color-green)); }\n.leetany-literal { color: var(--code-value, var(--color-orange)); }\n.leetany-comment { color: var(--text-muted); }\n\n@container (max-width: 550px) {\n  .leetany-splitter { display: none; }\n  .leetany-grid { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); }\n  .leetany-work { grid-template-rows: 19rem minmax(15rem, auto); border-inline-start: 0; border-top: 1px solid var(--background-modifier-border); }\n}\n.nav-file-title[data-leetany-badge="\u2705"] .nav-file-title-content::before { content: "\u2705 "; }\n.nav-file-title[data-leetany-badge="\u274C"] .nav-file-title-content::before { content: "\u274C "; }\n\n.workspace-leaf-content[data-type="leetany-practice"] > .view-header { display: none; }\n.leetany-description [hidden] { display: none; }\n.leetany-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }\n.leetany-meta:empty { display: none; }\n.leetany-level, .leetany-meta button.leetany-lesson {\n  display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem;\n  border-radius: 1rem; background: var(--leetany-field); box-shadow: none;\n  font-size: var(--font-ui-small); height: auto;\n}\n.leetany-level[data-level="easy"] { color: var(--color-green); }\n.leetany-level[data-level="medium"] { color: var(--color-yellow); }\n.leetany-level[data-level="hard"] { color: var(--color-red); }\n.leetany-meta .leetany-lesson svg { width: 1em; height: 1em; }\n.leetany-reference {\n  padding: .5rem 0; overflow-x: auto; background: transparent;\n  font: var(--leetany-code-size)/1.5 var(--font-monospace);\n}\n\n.leetany-radar-layout { display: flex; flex-wrap: wrap; align-items: center; gap: 1em; }\n.leetany-radar { width: min(100%, 310px); margin: 0; }\n.leetany-radar svg { width: 100%; display: block; }\n.leetany-radar-guide { fill: none; stroke: var(--background-modifier-border); }\n.leetany-radar-area { fill: var(--interactive-accent); fill-opacity: .18; stroke: var(--interactive-accent); }\n.leetany-radar-point { fill: var(--interactive-accent); }\n.leetany-radar-missing { fill: var(--background-primary); stroke: var(--text-muted); }\n.leetany-radar text { fill: var(--text-normal); font-size: 12px; }\n.leetany-progress select { max-width: 100%; }\n';
+    module2.exports = '.workspace-leaf-content[data-type="leetany-practice"] > .view-content.leetany-view {\n  height: 100%; min-height: 0; padding: 0; overflow: auto; container-type: inline-size;\n  --leetany-code-size: var(--font-ui-small, 13px);\n  --leetany-field: var(--background-modifier-hover);\n}\n.leetany-grid {\n  display: grid; grid-template-columns: var(--leetany-description-width, 50%) 1px minmax(0, 1fr);\n  height: 100%; min-height: 0; background: var(--background-primary);\n}\n.leetany-panel {\n  display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;\n}\n.leetany-panel-bar {\n  display: flex; align-items: center; flex: none; min-height: 2rem; gap: .5rem;\n  padding: 0 .5rem; border-bottom: 1px solid var(--background-modifier-border); color: var(--text-normal);\n  font-size: var(--font-ui-small); font-weight: 600;\n}\n.leetany-panel-bar .leetany-icon { display: inline-flex; color: var(--color-green); }\n.leetany-description .leetany-panel-bar .leetany-icon { color: var(--color-blue); }\n.leetany-panel-bar svg { width: 1rem; height: 1rem; }\n.leetany-problem, .leetany-test-body { overflow: auto; padding: clamp(.65rem, 1.4cqw, 1rem); }\n.leetany-problem h2 { margin: 0 0 1rem; font-size: 1.45em; line-height: 1.25; }\n.leetany-problem select { max-width: 100%; margin-bottom: 1rem; }\n.leetany-statement { line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }\n.leetany-problem h3 { margin: 1.6rem 0 .6rem; font-size: var(--font-ui-medium); }\n.leetany-example, .leetany-field pre {\n  white-space: pre-wrap; overflow-wrap: anywhere; margin: 0;\n  font: var(--font-ui-small)/1.55 var(--font-monospace);\n}\n.leetany-view .leetany-example {\n  padding: .5rem .85rem; border-left: 3px solid var(--background-modifier-border);\n  background: transparent;\n}\n.leetany-work {\n  min-width: 0; min-height: 0; display: grid;\n  grid-template-rows: minmax(0, 1.15fr) minmax(0, 1fr);\n\n}\n.leetany-splitter {\n  position: relative; z-index: 1; justify-self: center; width: 11px;\n  touch-action: none; cursor: col-resize;\n}\n.leetany-splitter::before {\n  content: ""; position: absolute; inset-block: 0; left: 50%;\n  width: 1px; transform: translateX(-50%); background: var(--background-modifier-border);\n}\n.leetany-splitter:is(:hover, :focus-visible)::before, .leetany-resizing .leetany-splitter::before {\n  width: 3px; background: var(--interactive-accent);\n}\n.leetany-resizing { user-select: none; }\n.leetany-tests { border-top: 1px solid var(--background-modifier-border); }\n.leetany-language { font-weight: normal; color: var(--text-muted); }\n.leetany-view button.leetany-run {\n  margin-left: auto; padding: 0 .7rem; box-shadow: none;\n  color: var(--color-green); background: var(--background-modifier-hover);\n}\n.leetany-editor { display: flex; flex: 1; min-height: 0; overflow: hidden; }\n.leetany-view button.leetany-tab, .leetany-view button.leetany-case {\n  border: none; box-shadow: none; background: transparent; color: var(--text-muted);\n}\n.leetany-view button.leetany-tab { display: inline-flex; gap: .4rem; padding: 0 .35rem; }\n.leetany-view button.leetany-tab[aria-pressed="true"] { color: var(--text-normal); font-weight: 600; }\n.leetany-case-list { display: flex; gap: .35rem; flex-wrap: wrap; margin-bottom: .85rem; }\n.leetany-view button.leetany-case { padding: 0 .75rem; }\n.leetany-view button.leetany-case[aria-pressed="true"], .leetany-view button.leetany-case:hover {\n  color: var(--text-normal); background: var(--leetany-field);\n}\n.leetany-view .leetany-pass, .leetany-view button[data-outcome="pass"] { color: var(--color-green); }\n.leetany-view .leetany-fail, .leetany-view button[data-outcome="fail"] { color: var(--color-red); }\n.leetany-summary { display: flex; align-items: baseline; gap: .65rem; margin-bottom: .85rem; }\n.leetany-summary strong { font-size: var(--font-ui-large); }\n.leetany-summary span, .leetany-empty, .leetany-field-label { color: var(--text-muted); font-size: var(--font-ui-small); }\n.leetany-empty { padding: .75rem 0; }\n.leetany-comparison {\n  display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));\n  gap: .65rem; margin-bottom: .85rem;\n}\n.leetany-tests .leetany-comparison .leetany-field { margin: 0; min-width: 0; }\n.leetany-field + .leetany-field { margin-top: .7rem; }\n.leetany-field-label { margin-bottom: .35rem; }\n.leetany-field pre { padding: .55rem .75rem; border-radius: var(--radius-s); background: var(--leetany-field); }\n.leetany-tests [hidden] { display: none; }\n.leetany-editor .cm-editor { width: 100%; height: 100%; min-width: 0; background: var(--background-primary); }\n.leetany-editor .cm-editor.cm-focused { outline: none; }\n.leetany-editor .cm-scroller { overflow: auto; font: var(--leetany-code-size)/1.5 var(--font-monospace); }\n.leetany-editor .cm-content, .leetany-editor .cm-gutters, .leetany-reference code { font-size: inherit; }\n.leetany-editor .cm-gutters { color: var(--text-faint); border: none; background: transparent; }\n.leetany-editor .cm-content { padding-block: .45rem; }\n.leetany-editor .cm-line { padding-inline: .65rem; }\n.leetany-editor .cm-content { caret-color: var(--text-normal); }\n.leetany-keyword { color: var(--code-keyword, var(--color-purple)); }\n.leetany-function { color: var(--code-function, var(--color-blue)); }\n.leetany-string { color: var(--code-string, var(--color-green)); }\n.leetany-literal { color: var(--code-value, var(--color-orange)); }\n.leetany-comment { color: var(--text-muted); }\n\n@container (max-width: 550px) {\n  .leetany-splitter { display: none; }\n  .leetany-grid { height: auto; min-height: 100%; grid-template-columns: minmax(0, 1fr); }\n  .leetany-work { grid-template-rows: 19rem minmax(15rem, auto); border-inline-start: 0; border-top: 1px solid var(--background-modifier-border); }\n}\n.nav-file-title[data-leetany-badge="\u2705"] .nav-file-title-content::before { content: "\u2705 "; }\n.nav-file-title[data-leetany-badge="\u274C"] .nav-file-title-content::before { content: "\u274C "; }\n\n.workspace-leaf-content[data-type="leetany-practice"] > .view-header { display: none; }\n.leetany-description [hidden] { display: none; }\n.leetany-meta { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }\n.leetany-meta:empty { display: none; }\n.leetany-level, .leetany-meta button.leetany-lesson {\n  display: inline-flex; align-items: center; gap: .35rem; padding: .2rem .65rem;\n  border-radius: 1rem; background: var(--leetany-field); box-shadow: none;\n  font-size: var(--font-ui-small); height: auto;\n}\n.leetany-level[data-level="easy"] { color: var(--color-green); }\n.leetany-level[data-level="medium"] { color: var(--color-yellow); }\n.leetany-level[data-level="hard"] { color: var(--color-red); }\n.leetany-meta .leetany-lesson svg { width: 1em; height: 1em; }\n.leetany-reference {\n  padding: .5rem 0; overflow-x: auto; background: transparent;\n  font: var(--leetany-code-size)/1.5 var(--font-monospace);\n}\n\n.leetany-radar-layout { display: flex; flex-wrap: wrap; align-items: center; gap: 1em; }\n.leetany-radar { width: min(100%, 310px); margin: 0; }\n.leetany-radar svg { width: 100%; display: block; }\n.leetany-radar-guide { fill: none; stroke: var(--background-modifier-border); }\n.leetany-radar-area { fill: var(--interactive-accent); fill-opacity: .18; stroke: var(--interactive-accent); }\n.leetany-radar-point { fill: var(--interactive-accent); }\n.leetany-radar-missing { fill: var(--background-primary); stroke: var(--text-muted); }\n.leetany-radar text { fill: var(--text-normal); font-size: 12px; }\n.leetany-progress select { max-width: 100%; }\n\n.leetany-radar-spoke { stroke: var(--interactive-accent); stroke-width: 4; }\n';
   }
 });
 

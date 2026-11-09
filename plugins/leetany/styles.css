@@ -129,3 +129,5 @@
 .leetany-radar-missing { fill: var(--background-primary); stroke: var(--text-muted); }
 .leetany-radar text { fill: var(--text-normal); font-size: 12px; }
 .leetany-progress select { max-width: 100%; }
+
+.leetany-radar-spoke { stroke: var(--interactive-accent); stroke-width: 4; }
