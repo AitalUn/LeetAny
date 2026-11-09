@@ -73,3 +73,16 @@ Open the vault as a project in Codex or Claude Code and ask for a LeetAny course
 ## Develop
 
 Install build dependencies with `npm ci`, edit the plugin sources, run `npm run build`, and reinstall. Run `node --test tests/leetany.test.cjs` and `python3 -m unittest discover -s tests`. MIT license.
+
+## Live course progress
+
+Add a fenced block to a Markdown note in your vault:
+
+```leetany-progress
+folder: Courses
+axes: [Python, ML, Statistics]
+```
+
+Set `skills` to an array of axis names on each exercise, for example `["Python", "ML"]`. Use unique exercise IDs across the selected folder. The radar counts each tagged exercise once per axis and once overall. An empty axis has no denominator. Current passing hashes are checked using the same function as the exercise view. In each course's numbered `00 ` route note, add one Markdown checkbox per lesson with its wikilink. Reading is self-reported. A chapter counts toward the 3/3 indicator when exactly three published tasks link to that chapter and all three currently pass.
+
+Optionally set `vacancies` to the vault path of a Markdown note. Enclose a six-column table in `<!-- leetany:requirements -->` and `<!-- /leetany:requirements -->`. Its columns are vacancy label, Markdown posting link, kind, requirement, course link and evidence. Each vacancy label identifies one posting. Kinds are `обязательно` (required), `желательно` (preferred), `опыт` (required experience), and `опыт+` (preferred experience). In the evidence column, use inline-code exercise IDs for an all-of check, an explicitly curated wikilink to a project or profile section for documented evidence, or a dash for unknown. Experience rows accept only documented evidence. Course links and generic skill tags alone do not satisfy requirements.

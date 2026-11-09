@@ -119,3 +119,13 @@
   padding: .5rem 0; overflow-x: auto; background: transparent;
   font: var(--leetany-code-size)/1.5 var(--font-monospace);
 }
+
+.leetany-radar-layout { display: flex; flex-wrap: wrap; align-items: center; gap: 1em; }
+.leetany-radar { width: min(100%, 310px); margin: 0; }
+.leetany-radar svg { width: 100%; display: block; }
+.leetany-radar-guide { fill: none; stroke: var(--background-modifier-border); }
+.leetany-radar-area { fill: var(--interactive-accent); fill-opacity: .18; stroke: var(--interactive-accent); }
+.leetany-radar-point { fill: var(--interactive-accent); }
+.leetany-radar-missing { fill: var(--background-primary); stroke: var(--text-muted); }
+.leetany-radar text { fill: var(--text-normal); font-size: 12px; }
+.leetany-progress select { max-width: 100%; }

@@ -8,6 +8,7 @@ const {addColumnSplitter} = require('./splitter');
 const {showDescription} = require('./description');
 const {TestPanel} = require('./test-panel');
 const {createCodeEditor} = require('./editor');
+const {registerProgress} = require('./progress');
 const bundledStyles = require('./styles.css');
 const {languageNames, parseExerciseFile, fingerprint, isComplete} = require('./core');
 
@@ -93,6 +94,7 @@ module.exports = class LeetAny extends Plugin {
   }
   async onload(){
     await this.useBundledStylesIfMissing();
+    registerProgress(this);
     this.settings={pythonPath:'python3',...await this.loadData()};
     this.registerView('leetany-practice',leaf=>new PracticeView(leaf,this));
     this.registerExtensions(['leetany'],'leetany-practice');
